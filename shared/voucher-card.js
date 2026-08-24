@@ -92,6 +92,13 @@
   // campaign landing page and the printed line said the same, so a client who scanned and a
   // client who typed both landed on the sales page rather than the terms she was pointed at.
   // Both now end at /terms/, and assets/qr-terms-*.svg were reminted to match on 21 August.
+  // The Confidence Mapping. One constant, used by the cover in text and by
+  // assets/qr-confidence-mapping.svg as a code: if this ever moves, the SVG has to be reminted
+  // in the same pass or the printed line and the scan go to two different places, which is
+  // exactly the fault the terms QR had before 21 August.
+  T.MAPPING_URL  = 'https://www.tararosesalon.com/en/ae/confidence-mapping/';
+  T.MAPPING_PATH = 'tararosesalon.com/en/ae/confidence-mapping';
+
   T.termsPath = function (emirate) {
     return 'tararosesalon.com/en/ae/wellness-voucher/' + T.emirateSlug(emirate) + '/terms';
   };
@@ -233,18 +240,34 @@
     // says any unused part of the allowance "ends with the validity period of your voucher", so
     // the main card's clock is the terms' own answer rather than this file's guess. See term 8 on
     // website-mockups/terms/terms.html.
+    //
+    // IT CANNOT BE SAVED ON THE DAY SHE PAYS, and that is the second card in the set with a
+    // condition on it rather than a date. The kit is matched to her at the Confidence Mapping
+    // and cannot be made up before it, so a kit card in her hand on Monday is a card she
+    // cannot use and a question reception has to field. It unlocks from the log, when somebody
+    // has seen her answers in the info@ inbox and ticked the box: alloc.mappingConfirmed comes
+    // off the mapping_confirmed column in voucher_log. See sql/voucher_mapping.sql.
+    //
+    // printable:false is doing real work here, not just greying a button. printHers() filters
+    // on it, so an unmapped kit card drops out of her file without printHers needing to know
+    // the rule, exactly as the referral card already does.
+    var mapped = !!alloc.mappingConfirmed;
     cards.push({
       type:'K', label:'Home Ritual Kit',
       serial:T.serialOf(tier,'K',branch,seq),
       face:T.faceGroups(tier,'K',branch,seq),
       lead:'Towards your Home Ritual Kit', value:t.kit, valueLabel:'Kit allowance',
-      expiry:mainExpiry, printable:true,
+      expiry:mainExpiry, printable:mapped,
       note:'An <b>allowance, not a budget</b>. Total the kit at shelf value, take AED ' +
            T.money(t.kit) + ' off, and she settles the difference when she collects it. ' +
            'Say the number before the kit is made up, never after, and tell her she can ask ' +
-           'for the fewest items that will work. <b>She cannot collect until ' +
-           'her Confidence Mapping is done</b>, so the card is hers today and the kit is not. ' +
-           'Same clock as the main card.'
+           'for the fewest items that will work. Same clock as the main card.' +
+           (mapped
+             ? ' <b>Her mapping is confirmed</b>, so this card can go to her.'
+             : ' <b>Cannot be sent yet.</b> Her kit is matched to her at the Confidence ' +
+               'Mapping and cannot be made up before it, so this card stays here until her ' +
+               'answers are in the <b>info@</b> inbox and the box below is ticked. Her own ' +
+               'file saves without it in the meantime.')
     });
 
     cards.push({
@@ -264,6 +287,9 @@
     return {
       seq:seq, branch:branch, tier:tier, name:name, purchase:purchase, cards:cards,
       live:!!alloc.live, id:alloc.id || null,
+      // Carried on the set as well as baked into the K card, because the tickbox in the log
+      // is about the BUYER rather than about whichever card happens to be on screen.
+      mappingConfirmed:mapped, mappingBy:alloc.mappingBy || null, mappingAt:alloc.mappingAt || null,
       // A set that is not live is either a practice run or a database that did not answer,
       // and the desk needs those two told apart: one is a choice, the other is a fault.
       practice:!!alloc.practice
@@ -279,7 +305,12 @@
       live: true,
       mainExpiry: T.parseDate(row.main_expires_on),
       friendExpiry: T.parseDate(row.friend_expires_on),
-      referralExpiry: row.referral_expires_on ? T.parseDate(row.referral_expires_on) : null
+      referralExpiry: row.referral_expires_on ? T.parseDate(row.referral_expires_on) : null,
+      // Absent on a database that has not had sql/voucher_mapping.sql run on it yet, which
+      // reads as false and keeps the kit card shut. Shut is the safe direction for a default.
+      mappingConfirmed: !!row.mapping_confirmed,
+      mappingBy: row.mapping_confirmed_by || null,
+      mappingAt: row.mapping_confirmed_at || null
     });
   };
 
@@ -364,16 +395,33 @@
     // the allowance, so she settles a difference on collection. Reception is already required
     // to say that before the bag is packed; putting it in writing means the card and the desk
     // say the same thing, and she reads it before she is standing there.
-    var kit = cards.filter(function (c) { return c.type === 'K'; })[0];
-    kit = kit
-      ? '<h2>Your kit allowance</h2>' +
-        '<p>AED ' + T.money(kit.value) + ' comes off the total when you collect your Home ' +
+    // Read off THE SET, not off the cards in this file, and that distinction is the whole
+    // point. On the day she pays her kit card is not in the file yet, because it does not
+    // unlock until her Confidence Mapping is done. If this paragraph came from the file she
+    // would be handed an allowance she is never told about and a step she is never asked to
+    // take, which is the one way this gate could cost her the kit rather than protect it.
+    var kitCard = set.cards.filter(function (c) { return c.type === 'K'; })[0];
+    var kit = '';
+    if (kitCard) {
+      var inFile = cards.indexOf(kitCard) !== -1;
+      kit = '<h2>Your kit allowance</h2>' +
+        '<p>AED ' + T.money(kitCard.value) + ' comes off the total when you collect your Home ' +
         'Ritual Kit. It covers part of the kit rather than all of it, so anything above ' +
-        'that you settle on the day. Your kit is matched to you at your Confidence Mapping, ' +
-        'so that comes first, and we will tell you the number before anything is made up. ' +
-        'If you would rather keep it small, say so before your kit is made up and we will ' +
-        'build it to the fewest items that will work.</p>'
-      : '';
+        'that you settle on the day. If you would rather keep it small, say so before your ' +
+        'kit is made up and we will build it to the fewest items that will work.</p>' +
+        (inFile
+          ? '<p>We will tell you the number before anything is made up.</p>'
+          // The one instruction on the whole cover, because it is the only thing standing
+          // between her and something she has already paid for.
+          // NOT "One thing to do first". The friends section two below already carries
+          // "One thing to do now", and two near-identical headings on one page make her
+          // decide which of them is the real instruction.
+          : '<h2>Your Confidence Mapping comes first</h2>' +
+            '<p>Your kit is matched to you at your <b>Confidence Mapping</b>, so that comes ' +
+            'first. It takes a few minutes: <b>' + T.MAPPING_PATH + '</b>. Your kit card ' +
+            'reaches you once it is done, and we will tell you the number before anything ' +
+            'is made up.</p>');
+    }
 
     // One file per friend is a privacy decision, not a filing preference, so it is explained
     // rather than left for her to notice.
@@ -445,20 +493,35 @@
     // is to treat it as prescribed care. Tara's 16 July ruling is that the client never thought it
     // was retail, so the word only introduces the idea. "Home care" is the pack's own term for the
     // same things and the published terms use it, so nothing is narrowed by dropping it.
+    //
+    // THREE clauses on the kit card, same as the others, and the first one is the QR's job:
+    // the code goes to the Confidence Mapping, not to the terms, because the mapping is the
+    // thing standing between her and the kit. The old first two are merged rather than a
+    // fourth line added; voucher-card.css says three and never four, and it is right.
     var rules = card.type === 'K'
-      ? ['Home care only. Not valid on salon services, and cannot be spent as credit.',
-         'An allowance towards the kit, not the full price of it. Anything above this is settled on collection.',
-         'No cash value. No change is given, and any unused part is not refunded or carried over.']
+      ? ['Scan the code to do your Confidence Mapping. Your kit is matched to you there and cannot be made up before it.',
+         'Home care only. Not valid on services or as credit, and it is an allowance towards the kit, not the full price of it.',
+         'Anything above the allowance is settled on collection. No cash value, no change given, and no refund on any unused part.']
       : ['Eligible salon services only. Not valid on home care or another voucher.',
          'No cash value. Cannot be exchanged or refunded, and cannot be combined with another offer.',
          'Subject to appointment availability. Standard booking and cancellation policies apply.'];
+
+    // Which code this card carries, and where it points. Every other card sends her to the
+    // terms, which is the only thing she might want to look up. The kit card sends her to the
+    // Confidence Mapping instead: she cannot collect the kit until it is done, so a terms link
+    // would be the less useful of the two on the one card that has a step attached to it. The
+    // terms are still on this face, printed along the bottom.
+    var kit = card.type === 'K';
+    var qrFile = kit ? 'qr-confidence-mapping.svg' : 'qr-terms-' + slug + '.svg';
+    var qrAlt  = kit ? 'Scan to do your Confidence Mapping' : 'Scan for the full terms';
+    var qrCap  = kit ? 'Do this first' : 'Scan for the full terms';
 
     return '' +
     '<div class="card back' + theme.cls + (extraClass ? ' ' + extraClass : '') + '">' +
       '<div class="sheen"></div>' +
       '<div class="brand"><img src="../assets/' + theme.logo + '" alt="Tara Rose Salon"></div>' +
-      '<div class="wv-qrbox"><img src="../assets/qr-terms-' + slug + '.svg" alt="Scan for the full terms"></div>' +
-      '<div class="wv-qrcap">Scan for the full terms</div>' +
+      '<div class="wv-qrbox"><img src="../assets/' + qrFile + '" alt="' + qrAlt + '"></div>' +
+      '<div class="wv-qrcap">' + T.esc(qrCap) + '</div>' +
       '<div class="wv-bk">' +
         row('Redeemable at', T.esc((card.type === 'B' ? T.birthdaySalons(b.emirate)
                                                      : T.salonsIn(b.emirate)).join(' and ')) + ' only') +

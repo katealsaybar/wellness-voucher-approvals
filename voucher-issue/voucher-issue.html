@@ -218,13 +218,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
       <div class="note" id="cardnote" style="display:none"></div>
 
       <ol class="steps">
-        <li data-n="1">Press <b>Save her file</b>. In the box that opens, choose <b>Save as PDF</b>, not a printer. That is her card, her birthday card and her Home Ritual Kit allowance, behind a cover page that explains the rest.</li>
+        <li data-n="1">Press <b>Save her file</b>. In the box that opens, choose <b>Save as PDF</b>, not a printer. That is her card and her birthday card, behind a cover page that explains the rest.</li>
         <li data-n="2">Then each gift card <b>on its own</b>. Pick it above, press <b>Save just this card</b>, repeat. One file per friend.</li>
         <li data-n="3"><b>Never send her the gift cards in one file with her own.</b> She forwards what you send her, so one file would show a friend her balance and every other gift serial.</li>
         <li data-n="4">Send them on the branch WhatsApp. PDFs, not photos: WhatsApp crushes an image and the serial is the first thing to go.</li>
         <li data-n="5">Paste her name and her serial into Phorest with the buttons above, so the sale and the card match.</li>
         <li data-n="6">Tell her to hand the friend cards out early. Their two months start today, not the day she gives them away.</li>
-        <li data-n="7">The kit card is an <b>allowance towards</b> her Home Ritual Kit, never the kit itself. Total the kit at shelf value, take the allowance off, and say the difference <b>before</b> it is made up. She can ask for the fewest items that will work, and term 8 gives her that, so offer it rather than waiting to be asked. She cannot collect until her Confidence Mapping is done.</li>
+        <li data-n="7"><b>The kit card does not go out today.</b> Her kit is matched to her at the Confidence Mapping and cannot be made up before it, so the card unlocks from <a href="../voucher-log/voucher-log.html">the log</a> once her answers are in the <b>info@</b> inbox and the box there is ticked. Point her at the mapping now: it is on the cover in her file, and the card carries the QR when she gets it.</li>
+        <li data-n="8">When it does go out, it is an <b>allowance towards</b> her Home Ritual Kit, never the kit itself. Total the kit at shelf value, take the allowance off, and say the difference <b>before</b> it is made up. She can ask for the fewest items that will work, and term 8 gives her that, so offer it rather than waiting to be asked.</li>
       </ol>
     </div>
 
@@ -475,8 +476,10 @@ function drawSet(){
   el('caption').innerHTML = 'Full serial <code>' + card.serial + '</code>';
 
   el('printall-btn').disabled = !set.live;
-  // Her file is the main card, the birthday card and the kit allowance. The gift cards and the
-  // referral card are saved one at a time, on purpose: see printHers in voucher-card.js.
+  // Her file is the main card and the birthday card. The kit card is in the same filter but
+  // is not printable until her Confidence Mapping is confirmed in the log, so at the till it
+  // drops out on its own. The gift cards and the referral card are saved one at a time, on
+  // purpose: see printHers in voucher-card.js.
   el('printall-btn').textContent = set.live ? 'Save her file' : 'Cannot print, nothing was logged';
 
   var note = el('cardnote');
