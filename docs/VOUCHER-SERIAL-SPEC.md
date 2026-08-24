@@ -103,8 +103,9 @@ Length dropped from 21 characters to 14. It is typed by hand at a till, sometime
 3. **The R card has no Phorest product.** It is a business adjustment. Its serial exists in the log and on the artwork, not as a gift card in Phorest.
 4. **The K card has no Phorest product either**, and for a different reason: it is an allowance against a home care bag, not credit she can spend. Reception totals the bag at shelf value, takes the allowance off, and takes the difference. Nothing depletes, so there is nothing for Phorest to hold.
 5. **The K card is the only one that spends on home care, and the only one that cannot spend on a service.** Every other card in the set is the other way round. That inversion is on the back of the card, because the shared rules block would otherwise tell her the card is not valid on the one thing it buys.
-6. **Friend cards number in issue order**, `-1` upward, not by which friend gets which.
-7. **One buyer buying twice gets two sequences.** Two separate sets.
+6. **The other cards' backs no longer say "retail products"** (24 Aug). They read "Not valid on home care or another voucher". Naming home care as retail is against Tara's 16 July ruling, and it was doing it in client-facing print inside the same PDF as a card that treats home care as prescribed care. Nothing is narrowed: "home care" is the pack's own term for the same things, and it is the term the published terms use.
+7. **Friend cards number in issue order**, `-1` upward, not by which friend gets which.
+8. **One buyer buying twice gets two sequences.** Two separate sets.
 
 ---
 
@@ -130,7 +131,7 @@ This is what the print interface fills, and it is what makes Belle's 19 Aug requ
 | `G` | purchase + 2 months, from **her** purchase date, not the day she hands it over |
 | `B` | same as `M`. Usable any time inside the main voucher's validity, not gated to her birthday month. Confirmed 20 Aug. |
 | `R` | referral completion + 2 months |
-| `K` | same as `M`. **Derived, not ruled on.** Nobody has set a collection window for the kit, so it runs on the main card's clock, which is the only choice that cannot outlive the voucher. If Kate sets a shorter one, this is the line that changes. |
+| `K` | same as `M`, and this is **ruled on, not derived**: term 8 of the published terms says any unused part of the allowance "ends with the validity period of your voucher". |
 
 ---
 

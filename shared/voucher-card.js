@@ -229,19 +229,20 @@
     // there is no build that fits inside the allowance at all. A card promising "your kit"
     // would be the one printed thing contradicting the till.
     //
-    // DERIVED, NOT LOCKED: the expiry. Nobody has ruled on how long she has to collect the kit,
-    // so it runs on the main card's clock, which is the same call the birthday card takes and
-    // the only one that cannot outlive the voucher. If Kate sets a shorter collection window,
-    // this is the line that changes.
+    // THE EXPIRY IS RULED ON, not derived. The Home Ritual Kit clause in the published terms
+    // says any unused part of the allowance "ends with the validity period of your voucher", so
+    // the main card's clock is the terms' own answer rather than this file's guess. See term 8 on
+    // website-mockups/terms/terms.html.
     cards.push({
       type:'K', label:'Home Ritual Kit',
       serial:T.serialOf(tier,'K',branch,seq),
       face:T.faceGroups(tier,'K',branch,seq),
       lead:'Towards your Home Ritual Kit', value:t.kit, valueLabel:'Kit allowance',
       expiry:mainExpiry, printable:true,
-      note:'An <b>allowance, not a budget</b>. Total the bag at shelf value, take AED ' +
+      note:'An <b>allowance, not a budget</b>. Total the kit at shelf value, take AED ' +
            T.money(t.kit) + ' off, and she settles the difference when she collects it. ' +
-           'Say the number before the bag is packed, never after. <b>She cannot collect until ' +
+           'Say the number before the kit is made up, never after, and tell her she can ask ' +
+           'for the fewest items that will work. <b>She cannot collect until ' +
            'her Confidence Mapping is done</b>, so the card is hers today and the kit is not. ' +
            'Same clock as the main card.'
     });
@@ -325,8 +326,9 @@
           '<div>' + T.esc(b.emirate) + ' salons</div>' +
         '</div>' +
       '</div>' +
-      // Dawn's wording, term 12. The terms page is not published yet, so there is no URL to
-      // point at; "full terms apply" is the honest version of that until there is one.
+      // Dawn's wording, term 12. The front stays a pointer rather than an address: the back
+      // carries both the QR and the printed path, and repeating it here would cost the line
+      // that tells her the credit is not cash.
       '<div class="fine">Cannot be exchanged for cash &middot; Full terms apply</div>' +
     '</div>';
   };
@@ -368,7 +370,9 @@
         '<p>AED ' + T.money(kit.value) + ' comes off the total when you collect your Home ' +
         'Ritual Kit. It covers part of the kit rather than all of it, so anything above ' +
         'that you settle on the day. Your kit is matched to you at your Confidence Mapping, ' +
-        'so that comes first, and we will tell you the number before anything is made up.</p>'
+        'so that comes first, and we will tell you the number before anything is made up. ' +
+        'If you would rather keep it small, say so before your kit is made up and we will ' +
+        'build it to the fewest items that will work.</p>'
       : '';
 
     // One file per friend is a privacy decision, not a filing preference, so it is explained
@@ -435,11 +439,17 @@
     // Every other card in the set spends on services and cannot touch home care. The kit card is
     // the one that spends the other way, so it cannot carry the shared rules: line one of them
     // would tell her the card is not valid on the only thing it buys.
+    //
+    // Line one used to read "not valid on home care, RETAIL PRODUCTS or another voucher", which
+    // named home care as retail in client-facing print, in the same PDF as a card whose whole job
+    // is to treat it as prescribed care. Tara's 16 July ruling is that the client never thought it
+    // was retail, so the word only introduces the idea. "Home care" is the pack's own term for the
+    // same things and the published terms use it, so nothing is narrowed by dropping it.
     var rules = card.type === 'K'
       ? ['Home care only. Not valid on salon services, and cannot be spent as credit.',
          'An allowance towards the kit, not the full price of it. Anything above this is settled on collection.',
          'No cash value. No change is given, and any unused part is not refunded or carried over.']
-      : ['Eligible salon services only. Not valid on home care, retail products or another voucher.',
+      : ['Eligible salon services only. Not valid on home care or another voucher.',
          'No cash value. Cannot be exchanged or refunded, and cannot be combined with another offer.',
          'Subject to appointment availability. Standard booking and cancellation policies apply.'];
 
