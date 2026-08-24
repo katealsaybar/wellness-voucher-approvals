@@ -1,14 +1,14 @@
 # Wellness Voucher · Serial Naming System
 
-**Status:** proposed, 20 Aug 2026 · Kate
+**Status:** proposed, 20 Aug 2026 · Kate · **`K` added 24 Aug 2026**
 **Supersedes:** the `AEWVDYT-AUH-2026-0001` scheme recorded under "Card numbering, already built" in `index.html`. That scheme was a draft written by Kate, not a convention set by Belle, and it covered the tier card only. The attribution in `index.html` was corrected on 20 Aug.
 **Reads from:** the nine Phorest gift card products (Decision 13) and the three validity clocks (19 Aug).
 
 ---
 
-## 1. What the 12 cards actually are
+## 1. What the 15 cards actually are
 
-Three tiers times four card types. The pack's "nine gift card products" counts only what Phorest holds; the refer-a-friend credit is a business adjustment, so it has artwork but no Phorest product.
+Three tiers times five card types. The pack's "nine gift card products" counts only what Phorest holds; the refer-a-friend credit and the kit allowance are business adjustments, so they have artwork but no Phorest product.
 
 | | Dip Your Toes | Season of You | All-In VIP Year |
 |---|---|---|---|
@@ -16,14 +16,17 @@ Three tiers times four card types. The pack's "nine gift card products" counts o
 | **G** · Gift a friend | AED 100 x 1 | AED 100 x 3 | AED 100 x 5 |
 | **B** · Birthday card | Blow-dry, AED 150 | AED 350 | AED 750 |
 | **R** · Refer a friend | + AED 100 | + AED 150 | + AED 200 |
+| **K** · Home Ritual Kit | AED 100 towards | AED 200 towards | AED 450 towards |
 
-Twelve artworks. But because the friend card is a stack of individual AED 100 cards, one buyer walks out with more than four:
+Fifteen artworks. But because the friend card is a stack of individual AED 100 cards, one buyer walks out with more than five:
 
 | Tier | Cards issued to one buyer |
 |---|---|
-| Dip Your Toes | 4 (1M + 1G + 1B + 1R) |
-| Season of You | 6 (1M + 3G + 1B + 1R) |
-| All-In VIP Year | 8 (1M + 5G + 1B + 1R) |
+| Dip Your Toes | 5 (1M + 1G + 1B + 1R + 1K) |
+| Season of You | 7 (1M + 3G + 1B + 1R + 1K) |
+| All-In VIP Year | 9 (1M + 5G + 1B + 1R + 1K) |
+
+**Why `K` exists at all.** The kit allowance was settled on 19 August at AED 100 / 200 / 450 and then had nowhere to live: it was the one thing a client bought that she was never handed. The only place the number was ever stated was reception's mouth at the till, against a standing rule that she must say it *before* the bag is packed. A card says it first, and it says the harder half too, that this is an allowance she tops up rather than a kit she has already paid for.
 
 ---
 
@@ -39,7 +42,7 @@ WV-<tier><type>-<branch>-<seq>[-<n>]
 |---|---|---|
 | `WV` | fixed | Wellness Voucher. Keeps this campaign from colliding with the next one. |
 | `<tier>` | `D` `S` `V` | Dip Your Toes · Season of You · All-In VIP Year. Reception sees the tier without opening anything. |
-| `<type>` | `M` `G` `B` `R` | Main · Gift · Birthday · Refer. **This is the block the old scheme was missing.** |
+| `<type>` | `M` `G` `B` `R` `K` | Main · Gift · Birthday · Refer · Kit. **This is the block the old scheme was missing.** |
 | `<branch>` | `SAA` `KCA` `AQ` `MC` | The branch that **issued** it. Already the estate's codes, so the log joins to branch reporting. |
 | `<seq>` | `0001`–`9999` | Per branch. One number per **buyer**, not per card. |
 | `<n>` | `1`–`5`, on `G` only | Which friend card in her stack. |
@@ -59,9 +62,10 @@ WV-SG-KCA-0042-2    friend card 2, AED 100
 WV-SG-KCA-0042-3    friend card 3, AED 100
 WV-SB-KCA-0042      her birthday card, AED 350
 WV-SR-KCA-0042      her refer-a-friend credit, AED 150
+WV-SK-KCA-0042      her Home Ritual Kit allowance, AED 200 towards
 ```
 
-Six cards, one number to remember. This is the same reasoning behind Kate's 19 Aug call to make both short clocks two months: reception holds one number, not several. When a friend walks in with `WV-SG-KCA-0042-2`, reception reads `0042` and lands on Sara without a search.
+Seven cards, one number to remember. This is the same reasoning behind Kate's 19 Aug call to make both short clocks two months: reception holds one number, not several. When a friend walks in with `WV-SG-KCA-0042-2`, reception reads `0042` and lands on Sara without a search.
 
 ---
 
@@ -97,8 +101,10 @@ Length dropped from 21 characters to 14. It is typed by hand at a till, sometime
 1. **Never reuse a sequence.** A refunded or voided voucher is struck in the log and its number retires with it. Gaps are fine; a reused number is not.
 2. **The R card cannot be printed at purchase.** Its clock starts when the third new client has visited *and paid*, so its "valid until" is unknowable at the till. It carries the buyer's sequence but is issued later, when the referral completes. Three of her four card types print at purchase; this one does not.
 3. **The R card has no Phorest product.** It is a business adjustment. Its serial exists in the log and on the artwork, not as a gift card in Phorest.
-4. **Friend cards number in issue order**, `-1` upward, not by which friend gets which.
-5. **One buyer buying twice gets two sequences.** Two separate sets.
+4. **The K card has no Phorest product either**, and for a different reason: it is an allowance against a home care bag, not credit she can spend. Reception totals the bag at shelf value, takes the allowance off, and takes the difference. Nothing depletes, so there is nothing for Phorest to hold.
+5. **The K card is the only one that spends on home care, and the only one that cannot spend on a service.** Every other card in the set is the other way round. That inversion is on the back of the card, because the shared rules block would otherwise tell her the card is not valid on the one thing it buys.
+6. **Friend cards number in issue order**, `-1` upward, not by which friend gets which.
+7. **One buyer buying twice gets two sequences.** Two separate sets.
 
 ---
 
@@ -106,15 +112,15 @@ Length dropped from 21 characters to 14. It is typed by hand at a till, sometime
 
 This is what the print interface fills, and it is what makes Belle's 19 Aug requirement work: *"ilagay nio n din sa e-voucher ung validity saka date of purchase ung editable sa side nmin"*. Flat JPG exports cannot satisfy this. Live text over the artwork can.
 
-| Field | M | G | B | R |
-|---|---|---|---|---|
-| Serial | yes | yes | yes | yes |
-| Client name | yes | blank, friend writes it | yes | yes |
-| Gifted by | no | yes, buyer's name | no | no |
-| Value | yes | AED 100 | yes | yes |
-| Date of purchase | yes | yes, buyer's purchase date | yes | date referral completed |
-| Valid until | yes | yes | yes | yes, filled on completion |
-| Issuing branch | yes | yes | yes | yes |
+| Field | M | G | B | R | K |
+|---|---|---|---|---|---|
+| Serial | yes | yes | yes | yes | yes |
+| Client name | yes | blank, friend writes it | yes | yes | yes |
+| Gifted by | no | yes, buyer's name | no | no | no |
+| Value | yes | AED 100 | yes | yes | yes, and it reads *towards* |
+| Date of purchase | yes | yes, buyer's purchase date | yes | date referral completed | yes |
+| Valid until | yes | yes | yes | yes, filled on completion | yes |
+| Issuing branch | yes | yes | yes | yes | yes |
 
 **Valid until, computed:**
 
@@ -124,6 +130,7 @@ This is what the print interface fills, and it is what makes Belle's 19 Aug requ
 | `G` | purchase + 2 months, from **her** purchase date, not the day she hands it over |
 | `B` | same as `M`. Usable any time inside the main voucher's validity, not gated to her birthday month. Confirmed 20 Aug. |
 | `R` | referral completion + 2 months |
+| `K` | same as `M`. **Derived, not ruled on.** Nobody has set a collection window for the kit, so it runs on the main card's clock, which is the only choice that cannot outlive the voucher. If Kate sets a shorter one, this is the line that changes. |
 
 ---
 

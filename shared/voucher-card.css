@@ -100,17 +100,24 @@
   text-transform:uppercase;white-space:nowrap;}
 .card .dates b{font-weight:600;opacity:1;letter-spacing:.07em;}
 
-/* ---------------- the four cards ----------------
+/* ---------------- the five cards ----------------
  * Colours sampled off Hanneh's exported pages, not chosen here. The gift card is black like the
  * main card; the referral and birthday cards are light, and a light card is not the black card
  * with a different background: the wordmark, the gold, the QR panel and the shadow all have to
  * turn over with it. TRSCard.cardTheme decides which of the two a card is and adds .wv-light.
  *
  * Only .card's own paint changes below. Every position is still the % and em geometry above, so
- * the four cards cannot drift apart in layout, only in colour.
+ * the five cards cannot drift apart in layout, only in colour.
  */
 .card.wv-t-R{background:linear-gradient(160deg,#D5CBC4 0%,#D8D0C9 52%,#DAD4CD 100%);}
 .card.wv-t-B{background:linear-gradient(160deg,#E4E1EC 0%,#EDEAF2 48%,#F6F4F9 100%);}
+/* The kit card, and the ONE colour here that is not Hanneh's: there is no artwork page for it,
+   because the set was four cards when she drew them. Sage, chosen against the other two rather
+   than out of the air. The taupe is a warm neutral and the lilac is a cool one, so a third
+   neutral would have given the desk three pale cards to tell apart at arm's length; a green is
+   far enough from both to read as a different card in the hand, and it is the one hue home care
+   already lives in. Replace this line when her page lands. */
+.card.wv-t-K{background:linear-gradient(160deg,#D7E0D6 0%,#E3EAE0 48%,#F0F5EE 100%);}
 
 .card.wv-light{color:#2D2E37;box-shadow:0 10px 26px rgba(45,46,55,.18);}
 /* The sheen is a highlight for a dark surface. At full strength on a pale card it reads as a

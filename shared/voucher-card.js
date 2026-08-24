@@ -39,10 +39,17 @@
   // with gift_serial empty. That is expected on this tier, not a miscount: gift_serial is
   // nullable for exactly this reason. Do not make it required, and do not refuse a friend for
   // arriving without a card.
+  //
+  // kit is the Home Ritual Kit ALLOWANCE, settled by Kate on 19 August at 100 / 200 / 450,
+  // Season of You corrected down from 250 in the same call. See docs/CAPS-AND-ALLOWANCES.md.
+  // It is an allowance, never a cap and never a budget she can build inside: the cheapest
+  // single item in the whole range is AED 114 against a AED 100 allowance on Dip Your Toes,
+  // so she settles a difference on every tier, every time. kitItems is what the sheet
+  // prescribes at that tier and is the only honest way to say what she is topping up towards.
   T.TIERS = {
-    D:{name:'Dip Your Toes',   places:1000, spends:1150, months:6,  friends:1, needs:3, birthday:150, birthdayWhat:'Birthday blow-dry', refer:100},
-    S:{name:'Season of You',   places:2500, spends:3000, months:9,  friends:3, needs:3, birthday:350, birthdayWhat:'Birthday facial',   refer:150},
-    V:{name:'All-In VIP Year', places:4500, spends:5400, months:12, friends:5, needs:3, birthday:750, birthdayWhat:'Birthday treat',    refer:200}
+    D:{name:'Dip Your Toes',   places:1000, spends:1150, months:6,  friends:1, needs:3, birthday:150, birthdayWhat:'Birthday blow-dry', refer:100, kit:100, kitItems:2},
+    S:{name:'Season of You',   places:2500, spends:3000, months:9,  friends:3, needs:3, birthday:350, birthdayWhat:'Birthday facial',   refer:150, kit:200, kitItems:4},
+    V:{name:'All-In VIP Year', places:4500, spends:5400, months:12, friends:5, needs:3, birthday:750, birthdayWhat:'Birthday treat',    refer:200, kit:450, kitItems:6}
   };
 
   // The back of the card names the salons rather than the emirate, because "Abu Dhabi salons"
@@ -143,8 +150,12 @@
   //
   // The two light cards cannot use the white wordmark or the black card's palette, so the theme
   // carries both decisions: the class the CSS themes off, and which logo file to load.
+  // The kit card (K) is the fifth, added 24 August, and it has NO Hanneh artwork behind it:
+  // her deck was drawn when the set was four cards. The sage below is this file's choice, made
+  // to sit beside her taupe and her lilac rather than to match a page she has not drawn. If she
+  // draws one, hers replaces it and only .card.wv-t-K in the CSS changes.
   T.cardTheme = function (card) {
-    var light = card.type === 'R' || card.type === 'B';
+    var light = card.type === 'R' || card.type === 'B' || card.type === 'K';
     return {
       cls: ' wv-t-' + card.type + (light ? ' wv-light' : ''),
       logo: light ? 'tara-rose-logo-black.png' : 'tara-rose-logo-card.png'
@@ -165,7 +176,7 @@
 
   /* ---------- one buyer's whole set ---------- */
   // One buyer, one sequence. The type letter is the only thing that changes, so reception
-  // holds a single number for all four, six or eight cards.
+  // holds a single number for all five, seven or nine cards.
   //
   // alloc carries {seq, mainExpiry, friendExpiry, live, id}. When it came from Postgres the
   // dates are the ones stored against the serial, so the card shows exactly what the log
@@ -204,6 +215,35 @@
       expiry:mainExpiry, printable:true,
       note:'Usable <b>any time</b> inside her voucher validity, not only in her birthday ' +
            'month. Same clock as the main card.'
+    });
+
+    // THE HOME RITUAL KIT ALLOWANCE, as a card. The allowance has existed since 19 August but
+    // had no object in her hand, so the only place it was ever stated was reception's mouth at
+    // the till, and the pack's own rule is that reception says the number BEFORE the bag is
+    // packed. A card says it before anybody says anything.
+    //
+    // The wording is not free here. The kit is never called retail, products or an extra: it is
+    // home care, and the locked copy rule is TOWARDS her Home Ritual Kit, never "your kit". That
+    // is not a style preference, it is arithmetic: the cheapest single item in the whole
+    // thirty-five-product range is AED 114 against a AED 100 allowance, so at Dip Your Toes
+    // there is no build that fits inside the allowance at all. A card promising "your kit"
+    // would be the one printed thing contradicting the till.
+    //
+    // DERIVED, NOT LOCKED: the expiry. Nobody has ruled on how long she has to collect the kit,
+    // so it runs on the main card's clock, which is the same call the birthday card takes and
+    // the only one that cannot outlive the voucher. If Kate sets a shorter collection window,
+    // this is the line that changes.
+    cards.push({
+      type:'K', label:'Home Ritual Kit',
+      serial:T.serialOf(tier,'K',branch,seq),
+      face:T.faceGroups(tier,'K',branch,seq),
+      lead:'Towards your Home Ritual Kit', value:t.kit, valueLabel:'Kit allowance',
+      expiry:mainExpiry, printable:true,
+      note:'An <b>allowance, not a budget</b>. Total the bag at shelf value, take AED ' +
+           T.money(t.kit) + ' off, and she settles the difference when she collects it. ' +
+           'Say the number before the bag is packed, never after. <b>She cannot collect until ' +
+           'her Confidence Mapping is done</b>, so the card is hers today and the kit is not. ' +
+           'Same clock as the main card.'
     });
 
     cards.push({
@@ -310,11 +350,26 @@
 
     // c.label is reception's word for the card, and "Main card" and "Birthday" are the wrong
     // words to hand a client. She is not filing them, she is being given them.
-    var CLIENT_NAME = { M:'Your card', B:T.birthdayTreat(set.tier, b.emirate), R:'Referral credit' };
+    var CLIENT_NAME = { M:'Your card', B:T.birthdayTreat(set.tier, b.emirate), R:'Referral credit',
+                        K:'Towards your Home Ritual Kit' };
     var list = cards.map(function (c) {
       return '<li><b>' + T.esc(CLIENT_NAME[c.type] || c.label) + '</b>, AED ' + T.money(c.value) +
              (c.expiry ? ', until ' + T.fmt(c.expiry) : '') + '</li>';
     }).join('');
+
+    // The one number on this page she has not been told yet, and the only one that costs her
+    // money later. The kit allowance is not the kit: at every tier the honest build is above
+    // the allowance, so she settles a difference on collection. Reception is already required
+    // to say that before the bag is packed; putting it in writing means the card and the desk
+    // say the same thing, and she reads it before she is standing there.
+    var kit = cards.filter(function (c) { return c.type === 'K'; })[0];
+    kit = kit
+      ? '<h2>Your kit allowance</h2>' +
+        '<p>AED ' + T.money(kit.value) + ' comes off the total when you collect your Home ' +
+        'Ritual Kit. It covers part of the kit rather than all of it, so anything above ' +
+        'that you settle on the day. Your kit is matched to you at your Confidence Mapping, ' +
+        'so that comes first, and we will tell you the number before anything is made up.</p>'
+      : '';
 
     // One file per friend is a privacy decision, not a filing preference, so it is explained
     // rather than left for her to notice.
@@ -343,6 +398,7 @@
         T.esc(T.salonsIn(b.emirate).join(' and ')) + '.</div>' +
       '<h2>In this file</h2>' +
       '<ul>' + list + '</ul>' +
+      kit +
       friends +
       refer +
       '<div class="wv-foot">' +
@@ -376,6 +432,17 @@
 
     var theme = T.cardTheme(card);
 
+    // Every other card in the set spends on services and cannot touch home care. The kit card is
+    // the one that spends the other way, so it cannot carry the shared rules: line one of them
+    // would tell her the card is not valid on the only thing it buys.
+    var rules = card.type === 'K'
+      ? ['Home care only. Not valid on salon services, and cannot be spent as credit.',
+         'An allowance towards the kit, not the full price of it. Anything above this is settled on collection.',
+         'No cash value. No change is given, and any unused part is not refunded or carried over.']
+      : ['Eligible salon services only. Not valid on home care, retail products or another voucher.',
+         'No cash value. Cannot be exchanged or refunded, and cannot be combined with another offer.',
+         'Subject to appointment availability. Standard booking and cancellation policies apply.'];
+
     return '' +
     '<div class="card back' + theme.cls + (extraClass ? ' ' + extraClass : '') + '">' +
       '<div class="sheen"></div>' +
@@ -388,11 +455,7 @@
         row('Full serial', T.esc(card.serial)) +
         row('Valid until', expiry) +
       '</div>' +
-      '<div class="wv-rules">' +
-        '<div>Eligible salon services only. Not valid on home care, retail products or another voucher.</div>' +
-        '<div>No cash value. Cannot be exchanged or refunded, and cannot be combined with another offer.</div>' +
-        '<div>Subject to appointment availability. Standard booking and cancellation policies apply.</div>' +
-      '</div>' +
+      '<div class="wv-rules">' + rules.map(function (r) { return '<div>' + r + '</div>'; }).join('') + '</div>' +
       '<div class="wv-bkurl">' + T.termsPath(b.emirate) + '</div>' +
     '</div>';
   };
@@ -460,7 +523,7 @@
   // Monday and three in November, which is the kind of quiet difference nobody can support.
   T.printHers = function (set) {
     var hers = set.cards.filter(function (c) {
-      return c.printable && (c.type === 'M' || c.type === 'B');
+      return c.printable && (c.type === 'M' || c.type === 'B' || c.type === 'K');
     });
     T.print(set, hers,
       'WV-' + set.branch + '-' + T.pad4(set.seq) + ' ' + set.name + ' wellness voucher', true);
