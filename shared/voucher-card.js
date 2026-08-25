@@ -241,33 +241,30 @@
     // the main card's clock is the terms' own answer rather than this file's guess. See term 8 on
     // website-mockups/terms/terms.html.
     //
-    // IT CANNOT BE SAVED ON THE DAY SHE PAYS, and that is the second card in the set with a
-    // condition on it rather than a date. The kit is matched to her at the Confidence Mapping
-    // and cannot be made up before it, so a kit card in her hand on Monday is a card she
-    // cannot use and a question reception has to field. It unlocks from the log, when somebody
-    // has seen her answers in the info@ inbox and ticked the box: alloc.mappingConfirmed comes
-    // off the mapping_confirmed column in voucher_log. See sql/voucher_mapping.sql.
-    //
-    // printable:false is doing real work here, not just greying a button. printHers() filters
-    // on it, so an unmapped kit card drops out of her file without printHers needing to know
-    // the rule, exactly as the referral card already does.
-    var mapped = !!alloc.mappingConfirmed;
+    // IT GOES OUT ON THE DAY SHE PAYS, and it did not always: until 25 August the card was
+    // held back until someone ticked a mapping box in the log, because the kit is matched to
+    // her at the Confidence Mapping and cannot be made up before it. Belle overturned that
+    // from the desk on 25 August, and her reasoning stands here so nobody restores the gate
+    // thinking it was lost by accident: a welcome file that lists every inclusion is the thing
+    // the client is happy to receive, a card held back is a reminder job the branch will not
+    // reliably do, and the client herself cannot ask about a card she has never seen. So the
+    // card ships with the file and CARRIES its own condition instead: the cover says the
+    // mapping comes first, and the card's back leads with it, QR and all. The mapping still
+    // gates the KIT, it just no longer gates the card that tells her about it.
     cards.push({
       type:'K', label:'Home Ritual Kit',
       serial:T.serialOf(tier,'K',branch,seq),
       face:T.faceGroups(tier,'K',branch,seq),
       lead:'Towards your Home Ritual Kit', value:t.kit, valueLabel:'Kit allowance',
-      expiry:mainExpiry, printable:mapped,
+      expiry:mainExpiry, printable:true,
       note:'An <b>allowance, not a budget</b>. Total the kit at shelf value, take AED ' +
            T.money(t.kit) + ' off, and she settles the difference when she collects it. ' +
            'Say the number before the kit is made up, never after, and tell her she can ask ' +
-           'for the fewest items that will work. Same clock as the main card.' +
-           (mapped
-             ? ' <b>Her mapping is confirmed</b>, so this card can go to her.'
-             : ' <b>Cannot be sent yet.</b> Her kit is matched to her at the Confidence ' +
-               'Mapping and cannot be made up before it, so this card stays here until her ' +
-               'answers are in the <b>info@</b> inbox and the box below is ticked. Her own ' +
-               'file saves without it in the meantime.')
+           'for the fewest items that will work. Same clock as the main card. ' +
+           '<b>Her kit still waits on her Confidence Mapping</b>: it is matched to her ' +
+           'there and cannot be made up before her answers are in the <b>info@</b> inbox. ' +
+           'The card and her cover both tell her so, and the card cannot be redeemed until ' +
+           'it is done.'
     });
 
     cards.push({
@@ -287,9 +284,6 @@
     return {
       seq:seq, branch:branch, tier:tier, name:name, purchase:purchase, cards:cards,
       live:!!alloc.live, id:alloc.id || null,
-      // Carried on the set as well as baked into the K card, because the tickbox in the log
-      // is about the BUYER rather than about whichever card happens to be on screen.
-      mappingConfirmed:mapped, mappingBy:alloc.mappingBy || null, mappingAt:alloc.mappingAt || null,
       // A set that is not live is either a practice run or a database that did not answer,
       // and the desk needs those two told apart: one is a choice, the other is a fault.
       practice:!!alloc.practice
@@ -305,12 +299,10 @@
       live: true,
       mainExpiry: T.parseDate(row.main_expires_on),
       friendExpiry: T.parseDate(row.friend_expires_on),
-      referralExpiry: row.referral_expires_on ? T.parseDate(row.referral_expires_on) : null,
-      // Absent on a database that has not had sql/voucher_mapping.sql run on it yet, which
-      // reads as false and keeps the kit card shut. Shut is the safe direction for a default.
-      mappingConfirmed: !!row.mapping_confirmed,
-      mappingBy: row.mapping_confirmed_by || null,
-      mappingAt: row.mapping_confirmed_at || null
+      referralExpiry: row.referral_expires_on ? T.parseDate(row.referral_expires_on) : null
+      // mapping_confirmed and its two companions are still on the row for anything issued
+      // while the log gated the kit card (before 25 August), but nothing reads them now:
+      // the card ships in her file from day one and the mapping condition is printed on it.
     });
   };
 
@@ -395,32 +387,26 @@
     // the allowance, so she settles a difference on collection. Reception is already required
     // to say that before the bag is packed; putting it in writing means the card and the desk
     // say the same thing, and she reads it before she is standing there.
-    // Read off THE SET, not off the cards in this file, and that distinction is the whole
-    // point. On the day she pays her kit card is not in the file yet, because it does not
-    // unlock until her Confidence Mapping is done. If this paragraph came from the file she
-    // would be handed an allowance she is never told about and a step she is never asked to
-    // take, which is the one way this gate could cost her the kit rather than protect it.
+    // The kit card is in this file from day one (25 August, Belle's call), so this section's
+    // job changed with it: it used to tell her a card was coming, now it is the disclaimer
+    // that the card in her hand cannot be redeemed before the mapping is done. The heading
+    // stays "comes first" because that is still true of the mapping, whatever the card does.
+    // NOT "One thing to do first". The friends section two below already carries
+    // "One thing to do now", and two near-identical headings on one page make her
+    // decide which of them is the real instruction.
     var kitCard = set.cards.filter(function (c) { return c.type === 'K'; })[0];
     var kit = '';
     if (kitCard) {
-      var inFile = cards.indexOf(kitCard) !== -1;
       kit = '<h2>Your kit allowance</h2>' +
         '<p>AED ' + T.money(kitCard.value) + ' comes off the total when you collect your Home ' +
         'Ritual Kit. It covers part of the kit rather than all of it, so anything above ' +
         'that you settle on the day. If you would rather keep it small, say so before your ' +
         'kit is made up and we will build it to the fewest items that will work.</p>' +
-        (inFile
-          ? '<p>We will tell you the number before anything is made up.</p>'
-          // The one instruction on the whole cover, because it is the only thing standing
-          // between her and something she has already paid for.
-          // NOT "One thing to do first". The friends section two below already carries
-          // "One thing to do now", and two near-identical headings on one page make her
-          // decide which of them is the real instruction.
-          : '<h2>Your Confidence Mapping comes first</h2>' +
-            '<p>Your kit is matched to you at your <b>Confidence Mapping</b>, so that comes ' +
-            'first. It takes a few minutes: <b>' + T.MAPPING_PATH + '</b>. Your kit card ' +
-            'reaches you once it is done, and we will tell you the number before anything ' +
-            'is made up.</p>');
+        '<h2>Your Confidence Mapping comes first</h2>' +
+        '<p>Your kit card is in this file, but your kit is matched to you at your ' +
+        '<b>Confidence Mapping</b>, so the card cannot be redeemed before that is done. ' +
+        'It takes a few minutes: <b>' + T.MAPPING_PATH + '</b>, or scan the code on the ' +
+        'back of the card. We will tell you the number before anything is made up.</p>';
     }
 
     // One file per friend is a privacy decision, not a filing preference, so it is explained
@@ -499,7 +485,7 @@
     // thing standing between her and the kit. The old first two are merged rather than a
     // fourth line added; voucher-card.css says three and never four, and it is right.
     var rules = card.type === 'K'
-      ? ['Scan the code to do your Confidence Mapping. Your kit is matched to you there and cannot be made up before it.',
+      ? ['Scan the code to do your Confidence Mapping first. Your kit is matched to you there, so this card cannot be redeemed until it is done.',
          'Home care only. Not valid on services or as credit, and it is an allowance towards the kit, not the full price of it.',
          'Anything above the allowance is settled on collection. No cash value, no change given, and no refund on any unused part.']
       : ['Eligible salon services only. Not valid on home care or another voucher.',
@@ -581,8 +567,9 @@
     window.print();
   };
 
-  // HER file: the two cards that are hers on the day she pays, behind a cover. The main card
-  // and the birthday card, and nothing else.
+  // HER file: the cards that are hers on the day she pays, behind a cover. The main card,
+  // the birthday card and the kit card (in the file since 25 August, with its mapping
+  // condition printed on it), and nothing else.
   //
   // NOT the gift cards. There used to be one button that put all eight in one file, and it was
   // the shortest path to a leak in the pack: she forwards that file to a friend, because it is

@@ -135,18 +135,6 @@ tr.det.hide{display:none;}
 .scap{text-align:center;font-size:13px;color:var(--muted);margin-bottom:14px;}
 .scap code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--sand);
   padding:2px 7px;border-radius:5px;color:var(--ink);font-weight:600;}
-/* The mapping gate. Amber unticked, because it is the one thing on this sheet standing
-   between the person and the button under it, and green once ticked so a confirmed voucher
-   reads as settled rather than as another thing to do. Same two colours the till uses for
-   the practice toggle, for the same reason: a state you must notice, then a state you
-   can stop looking at. */
-.mapbox{display:flex;gap:9px;align-items:flex-start;margin:0 0 14px;padding:11px 13px;
-  border:1px solid var(--amber);border-left-width:3px;border-radius:10px;
-  background:var(--amber-bg);font-size:12.5px;line-height:1.5;cursor:pointer;}
-.mapbox input{margin-top:2px;flex:0 0 auto;cursor:pointer;}
-.mapbox.on{border-color:var(--green);background:var(--green-bg);cursor:default;}
-.mapbox.on input{cursor:default;}
-
 .srow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
 .snote{border-radius:10px;padding:11px 13px;font-size:13px;margin-top:14px;}
 .snote.good{background:var(--green-bg);border-left:3px solid var(--green);}
@@ -505,39 +493,12 @@ function closeModal(){
   el('modal').setAttribute('aria-hidden', 'true');
   modalSet = null;
 }
-// The Confidence Mapping gate, and the only control on this page that unlocks something
-// rather than recording something that already happened.
-//
-// It sits under the serial because that is where the eye already is before pressing Save, and
-// because the thing it gates is the pair of buttons directly below it.
-//
-// WHAT TICKING IT MEANS. Not "she booked a mapping" and not "an email went out". It means the
-// person ticking has opened the info@ inbox and seen her answers, because that is where the
-// quiz delivers them and there is no other place to check. Nothing in this database can verify
-// that, which is why the label says who is being asked to look rather than just what to tick.
-//
-// It cannot be unticked. The write is a row in voucher_events, which is append-only like every
-// other later state here, so a mapping that was confirmed by mistake is a note to add, not a
-// tick to take back. Same standing as a friend being counted towards the referral.
-function mapBox(set){
-  var k = set.cards.filter(function (c){ return c.type === 'K'; })[0];
-  if (!k) return '';
-
-  if (set.mappingConfirmed){
-    var who = set.mappingBy ? ' by ' + C.esc(set.mappingBy) : '';
-    var when = set.mappingAt ? ' on ' + C.fmt(new Date(set.mappingAt)) : '';
-    return '<label class="mapbox on"><input type="checkbox" checked disabled>' +
-      '<span><b>Confidence Mapping confirmed</b>' + who + when + '. Her kit card can be ' +
-      'saved and her file now carries it.</span></label>';
-  }
-
-  return '<label class="mapbox" for="mapok"><input type="checkbox" id="mapok">' +
-    '<span><b>I have seen her Confidence Mapping answers in the info@ inbox.</b> ' +
-    'Until this is ticked the kit card cannot be saved on its own and is left out of her ' +
-    'file, because her kit is matched to her at the mapping and cannot be made up before it. ' +
-    'Her card and her birthday card save as normal.</span></label>';
-}
-
+// The Confidence Mapping gate used to live here: a tickbox that held the kit card out of her
+// file until someone had seen her answers in the info@ inbox. Retired 25 August, Belle's call
+// from the desk: the card ships in her file from day one and carries the condition itself,
+// on its back and on the cover, because a card she has never seen is a reminder job the
+// branch will not reliably do. The mapping_confirmed rows written while the gate ran are
+// still in voucher_events; nothing reads them now. See the K card in shared/voucher-card.js.
 function drawModal(){
   var set = modalSet, card = set.cards[modalIdx];
 
@@ -556,8 +517,6 @@ function drawModal(){
     '<div class="stage">' + C.render(set, card) + '</div>' +
     '<p class="scap">Full serial <code>' + card.serial + '</code></p>' +
 
-    mapBox(set) +
-
     '<div class="srow">' +
       '<button class="btn" id="mall">Save her file</button>' +
       '<button class="btn ghost" id="mone"' + (card.printable ? '' : ' disabled') + '>Save just this card</button>' +
@@ -573,31 +532,6 @@ function drawModal(){
     if (!b) return;
     modalIdx = +b.getAttribute('data-i');
     drawModal();
-  });
-
-  var tick = el('mapok');
-  if (tick) tick.addEventListener('change', function(){
-    if (!this.checked) return;
-    this.disabled = true;
-    // Written before anything unlocks, so the button never opens on a tick the database
-    // refused. A failed write puts the box back rather than leaving it ticked and useless.
-    addEvent(set.id, 'mapping_confirmed', 'Answers seen in the info@ inbox')
-      .then(function (res){
-        if (res.error){
-          alert('Not saved, so nothing is unlocked: ' + res.error.message +
-                NL + NL +
-                'If this says the kind is not allowed, sql/voucher_mapping.sql has not been ' +
-                'run on this database yet.');
-          tick.checked = false; tick.disabled = false;
-          return;
-        }
-        // The table AND the sheet in front of her. Reloading only the table would leave the
-        // modal showing an unticked box over a button that had just unlocked.
-        load().then(function (){
-          var fresh = byId(set.id);
-          if (fresh){ modalSet = C.setFromLogRow(fresh); drawModal(); }
-        });
-      });
   });
 
   el('mall').addEventListener('click', function(){ C.printHers(set); });

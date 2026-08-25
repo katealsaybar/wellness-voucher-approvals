@@ -2,6 +2,14 @@
 -- Run in Supabase: Dashboard -> SQL Editor -> New Query -> paste -> Run.
 -- Project: vlqvefsaxztitcbhirxt
 --
+-- RETIRED FROM THE PAGES, 25 AUGUST. Belle's call from the desk: the kit card now ships in
+-- the client's file from day one and carries the mapping condition itself, on its back and
+-- on the cover, so the tickbox is gone from the log and nothing gates on mapping_confirmed
+-- any more. This file stays because databases it ran on carry the column and the event kind,
+-- and the rows written while the gate ran are the record of it. Do not run it on a fresh
+-- database, and do not rebuild the tickbox from it without reading the K card comment in
+-- shared/voucher-card.js first.
+--
 -- RUN ORDER. This one goes LAST, after voucher_referrals.sql, because it redefines
 -- public.voucher_log and that view has to be built on top of the referral columns rather
 -- than instead of them:
