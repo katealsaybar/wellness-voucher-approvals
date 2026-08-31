@@ -7,6 +7,13 @@
 #   deliberately blocked when nothing can be logged, reception cannot hand a client her
 #   card at all. One read every couple of days is enough to keep it awake.
 #
+# WHAT A HEALTHY REPLY LOOKS LIKE NOW
+#   Since sql/voucher_lockdown.sql (20 Aug), anon holds no grant on the voucher tables, so
+#   the publishable key below is REFUSED by design. That refusal is the success case: one
+#   request proves the database is awake AND the lockdown is still holding. If this ping
+#   ever gets actual rows back, the lockdown has regressed and client names are on an open
+#   URL again, which is a louder emergency than a paused project, so that fails the run too.
+#
 # THIS IS A STOPGAP, NOT THE FIX
 #   It only answers the pausing. It does nothing about backups, which is the larger free-tier
 #   problem for something that is the only record of who holds which serial. The real fix is
@@ -15,8 +22,8 @@
 #
 # THE KEY BELOW IS NOT A LEAK
 #   sb_publishable_... is a publishable key. It is designed to sit in a browser, it is
-#   already served in this repo's own JavaScript on the public site, and everything it can
-#   reach is governed by row level security. It grants a read of voucher_counters and no more.
+#   already served in this repo's own JavaScript on the public site, and since the lockdown
+#   it reaches nothing at all on the voucher tables. Being refused is its whole job here.
 #
 # CAVEAT
 #   GitHub disables scheduled workflows after 60 days of no repository activity. That
@@ -40,28 +47,41 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Read one row from voucher_counters
+      - name: Knock on voucher_counters and expect to be refused
         env:
           SUPABASE_URL: https://vlqvefsaxztitcbhirxt.supabase.co
           SUPABASE_KEY: sb_publishable_JlOzwdcK0xjmE6j3nHmwhg_xDKxq1vv
         run: |
-          set -euo pipefail
+          set -uo pipefail
 
-          # --fail-with-body so a 4xx/5xx is a non-zero exit AND the response is printed.
-          # Without it curl exits 0 on an HTTP error and the heartbeat reports success while
-          # the database is unreachable, which is the one outcome that makes this worse than
-          # having no heartbeat at all.
-          body=$(curl --silent --show-error --fail-with-body \
+          # No --fail-with-body here: since the lockdown a 401 is the expected, healthy
+          # answer, so curl has to hand the body back rather than turn the refusal into
+          # an exit code. Only a transport failure (nothing answered) exits non-zero.
+          reply=$(curl --silent --show-error \
             --max-time 30 \
+            --write-out $'\n%{http_code}' \
             --header "apikey: ${SUPABASE_KEY}" \
             --header "Authorization: Bearer ${SUPABASE_KEY}" \
-            "${SUPABASE_URL}/rest/v1/voucher_counters?select=branch,next_seq&order=branch")
+            "${SUPABASE_URL}/rest/v1/voucher_counters?select=branch,next_seq&order=branch") \
+            || { echo "Nothing answered at all: transport failure or timeout." >&2; exit 1; }
 
-          echo "Counters: ${body}"
+          status=${reply##*$'\n'}
+          body=${reply%$'\n'*}
+          echo "HTTP ${status}: ${body}"
 
-          # A reachable but empty table means the schema is not what the till tool expects,
-          # so treat it as a failure too. sql/voucher_issues_setup.sql seeds four branches.
           case "$body" in
-            *'"branch"'*) echo "Awake, and the counters are there." ;;
-            *) echo "Reached the database but voucher_counters came back empty." >&2; exit 1 ;;
+            *'"branch"'*)
+              # Rows came back on the anonymous key. The database is awake, but the
+              # lockdown has regressed and the voucher tables are public again.
+              # Re-run sql/voucher_lockdown.sql before anything else.
+              echo "LOCKDOWN REGRESSED: voucher_counters is readable anonymously." >&2
+              exit 1 ;;
+            *'42501'*|*'permission denied'*)
+              echo "Awake, and the lockdown is holding: refused, as designed." ;;
+            *)
+              # Reached something, but the reply is neither counters nor the expected
+              # refusal: a paused project's holding page lands here, and so does any
+              # future change to the API's error shape.
+              echo "Unexpected reply: neither data nor the lockdown's refusal." >&2
+              exit 1 ;;
           esac
