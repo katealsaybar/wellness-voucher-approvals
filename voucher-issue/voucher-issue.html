@@ -171,6 +171,16 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
       </div>
 
       <div class="f">
+        <label for="pmethod">How she paid</label>
+        <select id="pmethod">
+          <option value="">Not recorded</option>
+          <option value="Stripe">Stripe</option>
+          <option value="Salon Payment">Salon Payment</option>
+          <option value="Tabby">Tabby</option>
+        </select>
+      </div>
+
+      <div class="f">
         <label for="who">Your name</label>
         <input id="who" type="text" placeholder="Your name" autocomplete="off">
         <p class="hint">So we can see who issued which card later. Typed once, then remembered.</p>
@@ -330,7 +340,7 @@ function verdictOf(err){
   return {state:'refused', message:msg};
 }
 
-function remoteIssue(branch, tier, name, purchase, who, contact){
+function remoteIssue(branch, tier, name, purchase, who, contact, paymentMethod){
   var d = db();
   if (!d) return Promise.resolve({state:'offline', message:'no Supabase client on this page'});
   return d.rpc('issue_voucher', {
@@ -339,7 +349,8 @@ function remoteIssue(branch, tier, name, purchase, who, contact){
     p_client_name: name,
     p_purchase_date: iso(purchase),
     p_client_contact: contact || null,
-    p_issued_by: who || null
+    p_issued_by: who || null,
+    p_payment_method: paymentMethod || null
   }).then(function (res){
     if (res.error) return verdictOf(res.error);
     var row = Array.isArray(res.data) ? res.data[0] : res.data;
@@ -529,6 +540,7 @@ el('issue').addEventListener('click', function(){
   var branch = el('branch').value, tier = el('tier').value;
   var purchase = parseDate(d), who = el('who').value.trim();
   var contact = el('ccontact').value.trim();
+  var paymentMethod = el('pmethod').value;
   var btn = this;
 
   // The campaign's own dates, checked here so a mistyped year costs a sentence rather than a
@@ -580,7 +592,7 @@ el('issue').addEventListener('click', function(){
       if (!ok) return null;
     }
     btn.textContent = 'Issuing...';
-    return remoteIssue(branch, tier, name, purchase, who, contact);
+    return remoteIssue(branch, tier, name, purchase, who, contact, paymentMethod);
   }).then(function (v){
     if (!v) return;                                    // she cancelled at the confirm
 
@@ -653,6 +665,7 @@ el('reset').addEventListener('click', function(){
   clearCards();
   el('cname').value = '';
   el('ccontact').value = '';
+  el('pmethod').value = '';
 });
 
 // The button carries the mode, so the label under your cursor says which of the two presses

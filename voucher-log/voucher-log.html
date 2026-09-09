@@ -55,6 +55,21 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
 .note.info{background:var(--blue-bg);border-left:3px solid var(--blue);}
 .tally{font-size:13px;color:var(--muted);margin-bottom:12px;}
 
+/* ---------------- voucher summary ---------------- */
+/* Live only, same definition of "live" as the tally line below it, and not affected by the
+   search box: this is a total, not a filtered count. */
+.sumbox{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  margin-bottom:16px;max-width:340px;overflow:hidden;}
+.sumhead{background:var(--ink);color:#fff;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;padding:10px 14px;}
+.sumtable{width:100%;border-collapse:collapse;font-size:13.5px;}
+.sumtable th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);font-weight:700;padding:8px 14px;border-bottom:1px solid var(--line);}
+.sumtable th.num,.sumtable td.num{text-align:right;}
+.sumtable td{padding:8px 14px;border-bottom:1px solid var(--line);}
+.sumtable tr:last-child td{border-bottom:none;}
+.sumtable tr.total td{font-weight:700;border-top:1px solid var(--ink);border-bottom:none;}
+
 /* ---------------- the table ---------------- */
 /* Wide, so it scrolls inside its own box rather than making the page scroll sideways. */
 .twrap{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow-x:auto;}
@@ -154,6 +169,8 @@ tr.det.hide{display:none;}
 
   <div class="note info" id="rolenote"></div>
 
+  <div id="summary"></div>
+
   <div class="bar">
     <input type="search" id="q" placeholder="Search a name, a serial, a branch or who issued it" autocomplete="off">
     <label><input type="checkbox" id="showarch"> Show archived</label>
@@ -227,6 +244,14 @@ var COLS = [
   {key:'tier_name', head:'Voucher',
    get:function(r){ return C.esc(r.tier_name); },
    sort:function(r){ return r.credit_aed; }},
+
+  {key:'payment_method', head:'Paid via',
+   get:function(r){ return r.payment_method ? C.esc(r.payment_method) : '<span class="muted">&ndash;</span>'; },
+   sort:function(r){ return (r.payment_method || '').toLowerCase(); }},
+
+  {key:'paid_aed', head:'Paid', cls:'num',
+   get:function(r){ return C.money(r.paid_aed); },
+   sort:function(r){ return r.paid_aed; }},
 
   {key:'credit_aed', head:'Credit', cls:'num',
    get:function(r){ return C.money(r.credit_aed); },
@@ -327,6 +352,20 @@ function load(){
     .then(draw);
 }
 
+/* ---------- voucher summary: units sold per tier, live only ---------- */
+function summaryHtml(live){
+  var order = Object.keys(C.TIERS).sort(function (a, b){
+    return C.TIERS[a].name.localeCompare(C.TIERS[b].name);
+  });
+  var rows = order.map(function (k){
+    var n = live.filter(function (r){ return r.tier === k; }).length;
+    return '<tr><td>' + C.esc(C.TIERS[k].name) + '</td><td class="num">' + n + '</td></tr>';
+  }).join('');
+  return '<div class="sumbox"><div class="sumhead">Voucher summary</div>' +
+    '<table class="sumtable"><thead><tr><th>Type of voucher</th><th class="num">Units sold</th></tr></thead>' +
+    '<tbody>' + rows + '<tr class="total"><td>Total</td><td class="num">' + live.length + '</td></tr></tbody></table></div>';
+}
+
 /* ---------- draw ---------- */
 function drawHead(){
   el('hrow').innerHTML = COLS.map(function (c){
@@ -357,6 +396,8 @@ function draw(){
   var live = rows.filter(function (r){ return !r.is_archived && !r.is_voided; });
   var placed = live.reduce(function (a, r){ return a + (r.credit_aed || 0); }, 0);
   var earned = live.filter(function (r){ return r.referral_earned; }).length;
+
+  el('summary').innerHTML = summaryHtml(live);
 
   el('tally').innerHTML = '<b>' + live.length + '</b> live ' + (live.length === 1 ? 'voucher' : 'vouchers') +
     ' &middot; <b>AED ' + C.money(placed) + '</b> of credit placed &middot; <b>' + earned + '</b> ' +
