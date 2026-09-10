@@ -30,11 +30,18 @@
 body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.6;font-size:16px;}
 .wrap{max-width:1180px;margin:0 auto;padding:36px 28px 90px;}
 
-.topwrap{display:flex;justify-content:space-between;align-items:stretch;gap:24px;
+.topwrap{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
   flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:24px;}
 .top{flex:1 1 380px;min-width:0;}
-.pdfrow{flex:0 0 auto;width:220px;display:flex;flex-direction:column;gap:8px;}
-.pdfrow .btn{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;}
+.pdfrow{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+/* Same look as the reception cheat sheet's .doclink, so a PDF link reads the same
+   wherever reception meets it. */
+.doclink{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;
+  text-decoration:none;border-radius:100px;padding:10px 18px;font-size:14px;font-weight:700;}
+.doclink:hover{background:#1C1B18;}
+.doclink .dl-ico{display:inline-flex;align-items:center;justify-content:center;
+  width:19px;height:19px;border-radius:4px;background:var(--accent);color:var(--ink);
+  font-size:9.5px;font-weight:800;letter-spacing:.02em;}
 .brandlogo{height:34px;width:auto;display:block;margin-bottom:18px;}
 .crumb{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
 .crumb a{color:var(--blue);font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
@@ -130,8 +137,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
     </div>
 
     <div class="pdfrow">
-      <a class="btn ghost" style="text-decoration:none;" href="wellness-voucher-pricing-abu-dhabi.pdf" target="_blank" rel="noopener">Abu Dhabi pricing PDF</a>
-      <a class="btn ghost" style="text-decoration:none;" href="wellness-voucher-pricing-dubai.pdf" target="_blank" rel="noopener">Dubai pricing PDF</a>
+      <a class="doclink" href="wellness-voucher-pricing-abu-dhabi.pdf" target="_blank" rel="noopener">
+        <span class="dl-ico" aria-hidden="true">PDF</span>
+        Abu Dhabi pricing
+      </a>
+      <a class="doclink" href="wellness-voucher-pricing-dubai.pdf" target="_blank" rel="noopener">
+        <span class="dl-ico" aria-hidden="true">PDF</span>
+        Dubai pricing
+      </a>
     </div>
   </div>
 
