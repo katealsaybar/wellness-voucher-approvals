@@ -53,9 +53,17 @@ update public.voucher_issues set payment_method = 'Stripe'
 --    A new parameter changes the function's signature, so CREATE OR REPLACE would leave the
 --    old 6-argument version sitting alongside this one rather than replacing it. Dropped
 --    first, same reasoning voucher_referrals.sql gives for the view below.
+--
+--    Drops BOTH the pre-migration 6-arg signature and the current 7-arg one, so this block
+--    is safe whether it is running for the first time or being re-run later (a date bump,
+--    say) after the 7-arg version is already live. A bare CREATE FUNCTION only ever worked
+--    once: the second run always hit "already exists with same argument types" the moment
+--    anyone re-ran this file, which is exactly what re-running it for the 31 Oct close date
+--    hit on 10 Sep 2026.
 -- ---------------------------------------------------------------------------
 
 drop function if exists public.issue_voucher(text,text,text,date,text,text);
+drop function if exists public.issue_voucher(text,text,text,date,text,text,text);
 
 create function public.issue_voucher(
   p_branch         text,
