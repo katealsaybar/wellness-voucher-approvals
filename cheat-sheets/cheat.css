@@ -29,6 +29,14 @@ a{color:inherit;}
 .stamp{margin-top:16px;font-size:13px;color:var(--muted);}
 .stamp b{color:var(--ink);font-weight:600;}
 
+/* A page that needs a button (or anything) beside the header wraps .top in this instead of
+   changing .top itself, so every other cheat sheet's bare <div class="top"> keeps its own
+   border and spacing untouched. */
+.topwrap{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
+  flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:34px;}
+.topwrap .top{flex:1 1 380px;min-width:0;border-bottom:none;padding-bottom:0;margin-bottom:0;}
+.pdfrow{flex:0 0 auto;display:flex;gap:8px;flex-wrap:wrap;padding-top:2px;}
+
 /* ---------- the one line ---------- */
 .oneline{
   background:var(--dark);color:#fff;border-radius:16px;padding:26px 28px;margin:0 0 34px;
