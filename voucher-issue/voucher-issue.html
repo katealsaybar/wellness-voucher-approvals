@@ -30,7 +30,10 @@
 body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.6;font-size:16px;}
 .wrap{max-width:1180px;margin:0 auto;padding:36px 28px 90px;}
 
-.top{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:24px;}
+.topwrap{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
+  flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:24px;}
+.top{flex:1 1 380px;min-width:0;}
+.pdfrow{flex:0 0 auto;display:flex;gap:8px;flex-wrap:wrap;padding-top:2px;}
 .brandlogo{height:34px;width:auto;display:block;margin-bottom:18px;}
 .crumb{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
 .crumb a{color:var(--blue);font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
@@ -116,13 +119,16 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
 <body data-auth-root="../">
 <div class="wrap">
 
-  <div class="top">
-    <img class="brandlogo" src="../assets/tara-rose-logo-black.png" alt="Tara Rose Salon">
-    <div class="crumb"><a href="../cheat-sheets/reception.html">Reception cheat sheet</a> &rsaquo; Issue a card &rsaquo; <a href="../voucher-log/voucher-log.html">the log</a></div>
-    <div class="team">Issue a Wellness Card</div>
-    <p class="owns">Pick the branch, the tier and her name. The serial, the value and every expiry date are worked out for you. Then print the card she needs as a PDF.</p>
-    <div class="stamp">Wellness Voucher &middot; purchases close <b>31 October 2026</b></div>
-    <div class="btnrow" style="margin-top:10px;">
+  <div class="topwrap">
+    <div class="top">
+      <img class="brandlogo" src="../assets/tara-rose-logo-black.png" alt="Tara Rose Salon">
+      <div class="crumb"><a href="../cheat-sheets/reception.html">Reception cheat sheet</a> &rsaquo; Issue a card &rsaquo; <a href="../voucher-log/voucher-log.html">the log</a></div>
+      <div class="team">Issue a Wellness Card</div>
+      <p class="owns">Pick the branch, the tier and her name. The serial, the value and every expiry date are worked out for you. Then print the card she needs as a PDF.</p>
+      <div class="stamp">Wellness Voucher &middot; purchases close <b>31 October 2026</b></div>
+    </div>
+
+    <div class="pdfrow">
       <a class="btn ghost" style="text-decoration:none;" href="wellness-voucher-pricing-abu-dhabi.pdf" target="_blank" rel="noopener">Abu Dhabi pricing PDF</a>
       <a class="btn ghost" style="text-decoration:none;" href="wellness-voucher-pricing-dubai.pdf" target="_blank" rel="noopener">Dubai pricing PDF</a>
     </div>
