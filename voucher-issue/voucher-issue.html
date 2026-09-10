@@ -30,10 +30,11 @@
 body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.6;font-size:16px;}
 .wrap{max-width:1180px;margin:0 auto;padding:36px 28px 90px;}
 
-.topwrap{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
+.topwrap{display:flex;justify-content:space-between;align-items:stretch;gap:24px;
   flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:24px;}
 .top{flex:1 1 380px;min-width:0;}
-.pdfrow{flex:0 0 auto;display:flex;gap:8px;flex-wrap:wrap;padding-top:2px;}
+.pdfrow{flex:0 0 auto;width:220px;display:flex;flex-direction:column;gap:8px;}
+.pdfrow .btn{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;}
 .brandlogo{height:34px;width:auto;display:block;margin-bottom:18px;}
 .crumb{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
 .crumb a{color:var(--blue);font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
