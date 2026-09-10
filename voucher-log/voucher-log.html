@@ -24,7 +24,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
 .wrap{max-width:1240px;margin:0 auto;padding:32px 24px 90px;}
 
 .brandlogo{height:32px;width:auto;display:block;margin-bottom:16px;}
-.top{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:20px;}
+.topwrap{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
+  flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:20px;}
+.top{flex:1 1 380px;min-width:0;}
 .crumb{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
 .crumb a{color:var(--blue);font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
 .crumb a:hover{color:var(--ink);text-decoration-thickness:2px;}
@@ -58,8 +60,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
 /* ---------------- voucher summary ---------------- */
 /* Live only, same definition of "live" as the tally line below it, and not affected by the
    search box: this is a total, not a filtered count. */
-.sumbox{background:var(--paper);border:1px solid var(--line);border-radius:12px;
-  margin-bottom:16px;max-width:340px;overflow:hidden;}
+#summary{flex:0 0 auto;width:100%;max-width:320px;}
+.sumbox{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
 .sumhead{background:var(--ink);color:#fff;font-size:11px;letter-spacing:.1em;
   text-transform:uppercase;font-weight:700;padding:10px 14px;}
 .sumtable{width:100%;border-collapse:collapse;font-size:13.5px;}
@@ -73,7 +75,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
 /* ---------------- the table ---------------- */
 /* Wide, so it scrolls inside its own box rather than making the page scroll sideways. */
 .twrap{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:980px;}
+.twrap table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:980px;}
 thead th{
   text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
   font-weight:700;padding:12px;border-bottom:1px solid var(--line);white-space:nowrap;
@@ -159,17 +161,19 @@ tr.det.hide{display:none;}
 <body data-auth-root="../">
 <div class="wrap">
 
-  <div class="top">
-    <img class="brandlogo" src="../assets/tara-rose-logo-black.png" alt="Tara Rose Salon">
-    <div class="crumb"><a href="../voucher-issue/voucher-issue.html">Issue a card</a> &rsaquo; The log</div>
-    <div class="team">The voucher log</div>
-    <p class="owns">Every Wellness Card issued, who issued it, and how far each client is towards her referral credit. Hover a row to see her card, click it for the whole set.</p>
-    <div class="who" id="who"></div>
+  <div class="topwrap">
+    <div class="top">
+      <img class="brandlogo" src="../assets/tara-rose-logo-black.png" alt="Tara Rose Salon">
+      <div class="crumb"><a href="../voucher-issue/voucher-issue.html">Issue a card</a> &rsaquo; The log</div>
+      <div class="team">The voucher log</div>
+      <p class="owns">Every Wellness Card issued, who issued it, and how far each client is towards her referral credit. Hover a row to see her card, click it for the whole set.</p>
+      <div class="who" id="who"></div>
+    </div>
+
+    <div id="summary"></div>
   </div>
 
   <div class="note info" id="rolenote"></div>
-
-  <div id="summary"></div>
 
   <div class="bar">
     <input type="search" id="q" placeholder="Search a name, a serial, a branch or who issued it" autocomplete="off">
