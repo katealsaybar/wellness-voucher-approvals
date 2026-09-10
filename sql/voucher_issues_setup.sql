@@ -42,8 +42,8 @@
 --     own seq, and the whole uniqueness guarantee would move from the database into a
 --     client that a receptionist can open the console on. The function is the only door.
 --
---   ADMIN (kate@tararosesalon.com)
---     everything above, plus the only account that may write voucher_events. That policy
+--   ADMIN (kate@tararosesalon.com, and info@tararosesalon.com since 21 August)
+--     everything above, plus the accounts that may write voucher_events. That policy
 --     lives in voucher_roles_fix.sql, because it needs is_admin() and this file is
 --     standalone. Nothing here is UPDATE-able by anybody, see below.
 --
@@ -233,8 +233,8 @@ begin
   --
   -- The floor is not a launch date, it is a mistyped-year catch: 2025 and 2016 are the
   -- realistic slips at a keyboard and both land outside it.
-  if p_purchase_date > date '2026-09-30' then
-    raise exception 'purchases closed on 30 September 2026, % is after that', p_purchase_date;
+  if p_purchase_date > date '2026-10-31' then
+    raise exception 'purchases closed on 31 October 2026, % is after that', p_purchase_date;
   end if;
   if p_purchase_date < date '2026-01-01' then
     raise exception 'purchase date % is before this campaign, check the year', p_purchase_date;

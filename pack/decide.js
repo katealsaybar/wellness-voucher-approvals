@@ -400,7 +400,7 @@
       foot.innerHTML = nm && done > 0
         ? 'Answering as <strong style="color:#D8D5CE">' + esc(nm) + '</strong> · ' +
           '<button type="button" id="dqReset">start these over</button>'
-        : 'Prepared by Kate · Campaign closes 30 September 2026';
+        : 'Prepared by Kate · Campaign closes 31 October 2026';
       var rs = document.getElementById('dqReset');
       if (rs) rs.addEventListener('click', function () {
         if (!window.confirm('Clear your answers on this device and start from the first card?\n\nNotes you have already posted stay where they are. This only resets your place in the queue.')) return;

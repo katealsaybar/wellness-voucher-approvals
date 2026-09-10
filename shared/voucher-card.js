@@ -19,7 +19,7 @@
   // afterwards. closes is the real one and it is stated on the till page too, so if it ever
   // moves it moves in both. issue_voucher() in sql/voucher_issues_setup.sql holds the same
   // two dates and is the one that actually refuses.
-  T.CAMPAIGN = { opens:'2026-01-01', closes:'2026-09-30' };
+  T.CAMPAIGN = { opens:'2026-01-01', closes:'2026-10-31' };
 
   T.BRANCHES = {
     SAA:{name:'Mamsha al Saadiyat', emirate:'Abu Dhabi'},
