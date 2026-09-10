@@ -23,22 +23,23 @@
 body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.6;font-size:16px;}
 .wrap{max-width:1240px;margin:0 auto;padding:32px 24px 90px;}
 
-.brandlogo{height:32px;width:auto;display:block;margin-bottom:16px;}
+.brandlogo{height:24px;width:auto;display:block;margin-bottom:10px;}
 .topwrap{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
-  flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:20px;}
+  flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:16px;}
 .top{flex:1 1 380px;min-width:0;}
-.crumb{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.crumb{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
 .crumb a{color:var(--blue);font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
 .crumb a:hover{color:var(--ink);text-decoration-thickness:2px;}
-.team{font-family:var(--serif);font-size:clamp(28px,5vw,42px);line-height:1.05;font-weight:600;margin-bottom:8px;}
-.owns{font-size:16px;color:var(--muted);max-width:66ch;}
+.team{font-family:var(--serif);font-size:clamp(20px,3.2vw,28px);line-height:1.1;font-weight:600;margin-bottom:6px;}
+.owns{font-size:13.5px;color:var(--muted);max-width:66ch;}
 
-.who{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:14px;}
+.who{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:10px;}
 .who b{color:var(--ink);}
 .pill{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   padding:3px 9px;border-radius:999px;background:var(--sand);color:var(--ink);}
 .pill.admin{background:var(--ink);color:#fff;}
 
+.stickybar{position:sticky;top:0;z-index:5;background:var(--bg);}
 .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
 .bar input[type=search]{flex:1 1 260px;font-family:var(--sans);font-size:15px;padding:11px 13px;
   border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);}
@@ -72,14 +73,21 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
 .sumtable tr:last-child td{border-bottom:none;}
 .sumtable tr.total td{font-weight:700;border-top:1px solid var(--ink);border-bottom:none;}
 
-.progwrap{padding:9px 11px 10px;}
+.progwrap{padding:9px 11px 10px;border-top:1px solid var(--line);}
 .progtrack{height:7px;border-radius:999px;background:var(--sand);overflow:hidden;}
 .progfill{height:100%;background:var(--green);border-radius:999px;}
 .progcap{margin-top:7px;font-size:11px;color:var(--muted);}
 
 /* ---------------- the table ---------------- */
-/* Wide, so it scrolls inside its own box rather than making the page scroll sideways. */
-.twrap{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow-x:auto;}
+/* Wide, so it scrolls sideways inside its own box rather than making the page scroll
+   sideways. That same box also carries the vertical scroll once it grows past max-height,
+   because a sticky thead cannot stay pinned to the page while its ancestor scrolls the
+   other axis — overflow-x:auto alone (even paired with overflow-y:clip) turns .twrap into
+   the sticky containing block, and it never itself scrolls, so "sticky" thead just sits at
+   its static position and slides away with the page. Giving it a real vertical scrollport
+   is what makes the header actually stick. */
+.twrap{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  overflow:auto;max-height:min(640px,70vh);}
 .twrap table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:980px;}
 thead th{
   text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
@@ -180,13 +188,15 @@ tr.det.hide{display:none;}
 
   <div class="note info" id="rolenote"></div>
 
-  <div class="bar">
-    <input type="search" id="q" placeholder="Search a name, a serial, a branch or who issued it" autocomplete="off">
-    <label><input type="checkbox" id="showarch"> Show archived</label>
-    <button class="btn ghost" id="refresh">Refresh</button>
-  </div>
+  <div class="stickybar" id="stickybar">
+    <div class="bar">
+      <input type="search" id="q" placeholder="Search a name, a serial, a branch or who issued it" autocomplete="off">
+      <label><input type="checkbox" id="showarch"> Show archived</label>
+      <button class="btn ghost" id="refresh">Refresh</button>
+    </div>
 
-  <p class="tally" id="tally">Loading&hellip;</p>
+    <p class="tally" id="tally">Loading&hellip;</p>
+  </div>
 
   <div class="twrap">
     <table>
@@ -375,9 +385,9 @@ function summaryHtml(live){
     var n = live.filter(function (r){ return r.tier === k; }).length;
     return '<tr><td>' + C.esc(C.TIERS[k].name) + '</td><td class="num">' + n + '</td></tr>';
   }).join('');
-  return '<div class="sumbox"><div class="sumhead">Voucher summary</div>' +
+  return '<div class="sumhead">Voucher summary</div>' +
     '<table class="sumtable"><thead><tr><th>Type of voucher</th><th class="num">Units sold</th></tr></thead>' +
-    '<tbody>' + rows + '<tr class="total"><td>Total</td><td class="num">' + live.length + '</td></tr></tbody></table></div>';
+    '<tbody>' + rows + '<tr class="total"><td>Total</td><td class="num">' + live.length + '</td></tr></tbody></table>';
 }
 
 /* ---------- campaign target: collected so far vs the 75k goal ---------- */
@@ -390,10 +400,9 @@ function targetPct(collected){
 }
 function progressHtml(collected){
   var pct = targetPct(collected);
-  return '<div class="sumbox" style="margin-top:10px"><div class="sumhead">Campaign target</div>' +
-    '<div class="progwrap"><div class="progtrack"><div class="progfill" style="width:' + pct + '%"></div></div>' +
+  return '<div class="progwrap"><div class="progtrack"><div class="progfill" style="width:' + pct + '%"></div></div>' +
     '<div class="progcap">AED ' + C.money(collected) + ' of AED ' + C.money(CAMPAIGN_TARGET_AED) +
-    ' &middot; ' + Math.round(pct) + '% &middot; ' + daysLeftToTarget() + ' days left</div></div></div>';
+    ' &middot; ' + Math.round(pct) + '% &middot; ' + daysLeftToTarget() + ' days left</div></div>';
 }
 
 /* ---------- draw ---------- */
@@ -428,7 +437,7 @@ function draw(){
   var collected = live.reduce(function (a, r){ return a + (r.paid_aed || 0); }, 0);
   var earned = live.filter(function (r){ return r.referral_earned; }).length;
 
-  el('summary').innerHTML = summaryHtml(live) + progressHtml(collected);
+  el('summary').innerHTML = '<div class="sumbox">' + summaryHtml(live) + progressHtml(collected) + '</div>';
 
   el('tally').innerHTML = '<b>' + live.length + '</b> live ' + (live.length === 1 ? 'voucher' : 'vouchers') +
     ' &middot; <b>AED ' + C.money(placed) + '</b> of credit placed &middot; <b>AED ' + C.money(collected) +
