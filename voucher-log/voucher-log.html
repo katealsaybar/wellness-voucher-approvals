@@ -399,12 +399,14 @@ function draw(){
 
   var live = rows.filter(function (r){ return !r.is_archived && !r.is_voided; });
   var placed = live.reduce(function (a, r){ return a + (r.credit_aed || 0); }, 0);
+  var collected = live.reduce(function (a, r){ return a + (r.paid_aed || 0); }, 0);
   var earned = live.filter(function (r){ return r.referral_earned; }).length;
 
   el('summary').innerHTML = summaryHtml(live);
 
   el('tally').innerHTML = '<b>' + live.length + '</b> live ' + (live.length === 1 ? 'voucher' : 'vouchers') +
-    ' &middot; <b>AED ' + C.money(placed) + '</b> of credit placed &middot; <b>' + earned + '</b> ' +
+    ' &middot; <b>AED ' + C.money(placed) + '</b> of credit placed &middot; <b>AED ' + C.money(collected) +
+    '</b> collected &middot; <b>' + earned + '</b> ' +
     (earned === 1 ? 'has' : 'have') + ' earned the referral credit' +
     (term ? ' &middot; showing ' + shown.length + ' for &ldquo;' + C.esc(term) + '&rdquo;' : '');
 
