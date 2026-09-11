@@ -241,6 +241,7 @@ function db(){ return (window.TRS && window.TRS.db) || null; }
 function admin(){ return !!(window.TRS && window.TRS.isAdmin && window.TRS.isAdmin()); }
 
 var rows = [], friendsBy = {}, notesBy = {}, hasReferrals = true;
+var redemptionsBy = {}, hasRedemptions = true;
 // Matches the check constraint on voucher_issues.payment_method (sql/voucher_payment_method.sql).
 var PAYMENT_METHODS = ['Stripe', 'Salon Payment', 'Tabby'];
 var openRows = {}, sortKey = 'created_at', sortDir = -1, modalSet = null, modalIdx = 0;
@@ -282,6 +283,13 @@ var COLS = [
   {key:'credit_aed', head:'Credit', cls:'num',
    get:function(r){ return C.money(r.credit_aed); },
    sort:function(r){ return r.credit_aed; }},
+
+  {key:'remaining_aed', head:'Remaining', cls:'num',
+   get:function(r){
+     if (typeof r.remaining_aed !== 'number') return '<span class="muted">&ndash;</span>';
+     return C.money(r.remaining_aed);
+   },
+   sort:function(r){ return typeof r.remaining_aed === 'number' ? r.remaining_aed : r.credit_aed; }},
 
   {key:'purchase_date', head:'Bought', cls:'dt',
    get:function(r){ return C.fmt(r.purchase_date); },
@@ -355,14 +363,37 @@ function load(){
       // not been run, and every referral control goes quiet rather than rendering
       // "undefined of 3" beside a client's name.
       hasReferrals = !rows.length || Object.prototype.hasOwnProperty.call(rows[0], 'friends_so_far');
-      if (!hasReferrals){ friendsBy = {}; notesBy = {}; return; }
+      // voucher_redemptions.sql adds remaining_aed the same way. Absent means that migration
+      // hasn't run yet, so the redemption list and its add-form go quiet too.
+      hasRedemptions = !rows.length || Object.prototype.hasOwnProperty.call(rows[0], 'remaining_aed');
+      if (!hasReferrals){ friendsBy = {}; notesBy = {}; }
+      if (!hasRedemptions){ redemptionsBy = {}; }
+      if (!hasReferrals && !hasRedemptions) return;
 
-      return d.from('voucher_referrals').select('*').order('visited_on', {ascending:true})
-        .then(function (r2){
-          friendsBy = {};
-          (r2.data || []).forEach(function (f){
-            (friendsBy[f.issue_id] = friendsBy[f.issue_id] || []).push(f);
+      var next = Promise.resolve();
+
+      if (hasReferrals){
+        next = d.from('voucher_referrals').select('*').order('visited_on', {ascending:true})
+          .then(function (r2){
+            friendsBy = {};
+            (r2.data || []).forEach(function (f){
+              (friendsBy[f.issue_id] = friendsBy[f.issue_id] || []).push(f);
+            });
           });
+      }
+
+      return next
+        .then(function (){
+          if (!hasRedemptions) return;
+          return d.from('voucher_redemptions').select('*').order('redeemed_on', {ascending:true})
+            .then(function (r4){
+              redemptionsBy = {};
+              (r4.data || []).forEach(function (u){
+                (redemptionsBy[u.issue_id] = redemptionsBy[u.issue_id] || []).push(u);
+              });
+            });
+        })
+        .then(function (){
           // Notes belong on screen, not only in the table. A corrected name leaves one, and
           // the desk needs to see why a card in a client's hand is spelled differently.
           return d.from('voucher_events').select('issue_id,detail,recorded_by,created_at')
@@ -504,6 +535,34 @@ function detailHtml(r){
         '<button class="btn sm" data-addf="' + r.id + '">Add this friend</button>' +
       '</div>';
     }
+  }
+
+  if (hasRedemptions){
+    var used = redemptionsBy[r.id] || [];
+    left += '<div style="margin-top:14px"><div class="lbl">What she has used it on</div>';
+    left += used.length
+      ? '<ul class="friends">' + used.map(function (u){
+          return '<li><b>' + C.fmt(u.redeemed_on) + ' &middot; ' + C.esc(u.service) + '</b>' +
+            '<span class="muted">&minus;AED ' + C.money(u.amount_aed) + '</span>' +
+            (isAdm ? '<button class="btn danger sm" data-delu="' + u.id + '">Remove</button>' : '') +
+          '</li>';
+        }).join('') + '</ul>'
+      : '<p class="muted" style="margin-bottom:12px">Nothing logged yet.</p>';
+
+    if (isAdm){
+      left += '<div class="addf">' +
+        '<div class="fld"><label>Day she used it</label>' +
+          '<input type="date" data-ud="' + r.id + '" value="' + C.iso(C.today()) + '"></div>' +
+        '<div class="fld" style="flex:2 1 200px"><label>Service(s)</label>' +
+          '<input type="text" data-us="' + r.id + '" placeholder="e.g. Full head foils, toner, pedicure"></div>' +
+        '<div class="fld"><label>Amount deducted</label>' +
+          '<input type="number" step="0.01" min="0.01" data-ua="' + r.id + '" placeholder="AED"></div>' +
+        '<button class="btn sm" data-addu="' + r.id + '">Log this</button>' +
+      '</div>';
+    }
+  } else if (isAdm){
+    left += '<div style="margin-top:14px"><div class="lbl">What she has used it on</div>' +
+      '<p class="muted">Not set up yet. Run <code>sql/voucher_redemptions.sql</code> in Supabase.</p></div>';
   }
 
   if (notes.length){
@@ -660,6 +719,22 @@ function addFriend(id){
   });
 }
 
+function addRedemption(id){
+  var when = document.querySelector('[data-ud="' + id + '"]').value;
+  var service = document.querySelector('[data-us="' + id + '"]').value.trim();
+  var amountStr = document.querySelector('[data-ua="' + id + '"]').value;
+  var amount = parseFloat(amountStr);
+  if (!when || !service){ alert('A date and the service(s) are both needed.'); return; }
+  if (!amountStr || !(amount > 0)){ alert('The amount deducted has to be a number above zero.'); return; }
+  db().from('voucher_redemptions').insert({
+    issue_id:id, redeemed_on:when, service:service,
+    amount_aed:amount, recorded_by:window.TRS.email()
+  }).then(function (res){
+    if (res.error){ alert('Not saved: ' + res.error.message); return; }
+    load();
+  });
+}
+
 function addEvent(id, kind, detail){
   return db().from('voucher_events').insert({
     issue_id:id, kind:kind, detail:detail || null, recorded_by:window.TRS.email()
@@ -741,10 +816,21 @@ el('body').addEventListener('click', function (e){
   if (t.hasAttribute('data-rename')){ rename(t.getAttribute('data-rename')); return; }
   if (t.hasAttribute('data-editpay')){ editPayment(t.getAttribute('data-editpay')); return; }
   if (t.hasAttribute('data-addf')){ addFriend(t.getAttribute('data-addf')); return; }
+  if (t.hasAttribute('data-addu')){ addRedemption(t.getAttribute('data-addu')); return; }
 
   if (t.hasAttribute('data-delf')){
     if (!confirm('Remove this friend from the count?')) return;
     db().from('voucher_referrals').delete().eq('id', t.getAttribute('data-delf'))
+      .then(function (res){
+        if (res.error){ alert('Not removed: ' + res.error.message); return; }
+        load();
+      });
+    return;
+  }
+
+  if (t.hasAttribute('data-delu')){
+    if (!confirm('Remove this from her balance?')) return;
+    db().from('voucher_redemptions').delete().eq('id', t.getAttribute('data-delu'))
       .then(function (res){
         if (res.error){ alert('Not removed: ' + res.error.message); return; }
         load();
