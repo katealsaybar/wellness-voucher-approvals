@@ -241,6 +241,8 @@ function db(){ return (window.TRS && window.TRS.db) || null; }
 function admin(){ return !!(window.TRS && window.TRS.isAdmin && window.TRS.isAdmin()); }
 
 var rows = [], friendsBy = {}, notesBy = {}, hasReferrals = true;
+// Matches the check constraint on voucher_issues.payment_method (sql/voucher_payment_method.sql).
+var PAYMENT_METHODS = ['Stripe', 'Salon Payment', 'Tabby'];
 var openRows = {}, sortKey = 'created_at', sortDir = -1, modalSet = null, modalIdx = 0;
 
 /* ---------- the columns, and how each one sorts ---------- */
@@ -515,6 +517,7 @@ function detailHtml(r){
   left += '<div class="acts">' +
     '<button class="btn sm" data-cards="' + r.id + '">View her cards</button>' +
     (isAdm ? '<button class="btn ghost sm" data-rename="' + r.id + '">Fix the name</button>' : '') +
+    (isAdm ? '<button class="btn ghost sm" data-editpay="' + r.id + '">Fix how she paid</button>' : '') +
     (isAdm && !r.is_archived ? '<button class="btn ghost sm" data-arch="' + r.id + '">Archive this row</button>' : '') +
     (isAdm && !r.is_voided ? '<button class="btn danger sm" data-void="' + r.id + '">Void this card</button>' : '') +
   '</div>';
@@ -687,6 +690,33 @@ function rename(id){
     .then(function (){ load(); });
 }
 
+function editPayment(id){
+  var row = byId(id);
+  if (!row) return;
+  var next = prompt(
+    'How did she pay?' + NL + NL +
+    'Type one of: ' + PAYMENT_METHODS.join(', ') + '.' + NL +
+    'Leave blank to clear it.',
+    row.payment_method || '');
+  if (next === null) return;
+  next = next.trim();
+
+  var val = null;
+  if (next){
+    val = PAYMENT_METHODS.filter(function (m){ return m.toLowerCase() === next.toLowerCase(); })[0];
+    if (!val){ alert('That has to be ' + PAYMENT_METHODS.join(', ') + ', or blank.'); return; }
+  }
+  if (val === (row.payment_method || null)) return;
+
+  db().from('voucher_issues').update({payment_method:val}).eq('id', id)
+    .then(function (res){
+      if (res.error){ alert('Not changed: ' + res.error.message); return null; }
+      return addEvent(id, 'note', 'Payment method changed from "' + (row.payment_method || 'none') +
+        '" to "' + (val || 'none') + '"');
+    })
+    .then(function (){ load(); });
+}
+
 /* ---------- wiring ---------- */
 el('hrow').addEventListener('click', function (e){
   var th = e.target.closest('th');
@@ -709,6 +739,7 @@ el('body').addEventListener('click', function (e){
 
   if (t.hasAttribute('data-cards')){ hidePeek(); openModal(byId(t.getAttribute('data-cards'))); return; }
   if (t.hasAttribute('data-rename')){ rename(t.getAttribute('data-rename')); return; }
+  if (t.hasAttribute('data-editpay')){ editPayment(t.getAttribute('data-editpay')); return; }
   if (t.hasAttribute('data-addf')){ addFriend(t.getAttribute('data-addf')); return; }
 
   if (t.hasAttribute('data-delf')){
