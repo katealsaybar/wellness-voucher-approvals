@@ -285,11 +285,18 @@ var COLS = [
    sort:function(r){ return r.credit_aed; }},
 
   {key:'remaining_aed', head:'Remaining', cls:'num',
+   // Postgres numeric columns come back from Supabase as strings ("1150.00"), not JS
+   // numbers, because PostgREST won't risk float precision loss on money. credit_aed and
+   // paid_aed dodge this by being plain integers in the CASE that builds them; remaining_aed
+   // doesn't, since it's a numeric(10,2) subtraction, so it needs Number() before use.
    get:function(r){
-     if (typeof r.remaining_aed !== 'number') return '<span class="muted">&ndash;</span>';
+     if (r.remaining_aed === null || r.remaining_aed === undefined) return '<span class="muted">&ndash;</span>';
      return C.money(r.remaining_aed);
    },
-   sort:function(r){ return typeof r.remaining_aed === 'number' ? r.remaining_aed : r.credit_aed; }},
+   sort:function(r){
+     var v = Number(r.remaining_aed);
+     return isNaN(v) ? r.credit_aed : v;
+   }},
 
   {key:'purchase_date', head:'Bought', cls:'dt',
    get:function(r){ return C.fmt(r.purchase_date); },
@@ -543,7 +550,8 @@ function detailHtml(r){
     left += used.length
       ? '<ul class="friends">' + used.map(function (u){
           return '<li><b>' + C.fmt(u.redeemed_on) + ' &middot; ' + C.esc(u.service) + '</b>' +
-            '<span class="muted">&minus;AED ' + C.money(u.amount_aed) + '</span>' +
+            '<span class="muted">' + (u.stylist ? C.esc(u.stylist) + ' &middot; ' : '') +
+              '&minus;AED ' + C.money(u.amount_aed) + '</span>' +
             (isAdm ? '<button class="btn danger sm" data-delu="' + u.id + '">Remove</button>' : '') +
           '</li>';
         }).join('') + '</ul>'
@@ -553,6 +561,8 @@ function detailHtml(r){
       left += '<div class="addf">' +
         '<div class="fld"><label>Day she used it</label>' +
           '<input type="date" data-ud="' + r.id + '" value="' + C.iso(C.today()) + '"></div>' +
+        '<div class="fld"><label>Stylist</label>' +
+          '<input type="text" data-ust="' + r.id + '" placeholder="Who did it"></div>' +
         '<div class="fld" style="flex:2 1 200px"><label>Service(s)</label>' +
           '<input type="text" data-us="' + r.id + '" placeholder="e.g. Full head foils, toner, pedicure"></div>' +
         '<div class="fld"><label>Amount deducted</label>' +
@@ -721,13 +731,14 @@ function addFriend(id){
 
 function addRedemption(id){
   var when = document.querySelector('[data-ud="' + id + '"]').value;
+  var stylist = document.querySelector('[data-ust="' + id + '"]').value.trim();
   var service = document.querySelector('[data-us="' + id + '"]').value.trim();
   var amountStr = document.querySelector('[data-ua="' + id + '"]').value;
   var amount = parseFloat(amountStr);
-  if (!when || !service){ alert('A date and the service(s) are both needed.'); return; }
+  if (!when || !stylist || !service){ alert('A date, the stylist and the service(s) are all needed.'); return; }
   if (!amountStr || !(amount > 0)){ alert('The amount deducted has to be a number above zero.'); return; }
   db().from('voucher_redemptions').insert({
-    issue_id:id, redeemed_on:when, service:service,
+    issue_id:id, redeemed_on:when, stylist:stylist, service:service,
     amount_aed:amount, recorded_by:window.TRS.email()
   }).then(function (res){
     if (res.error){ alert('Not saved: ' + res.error.message); return; }
