@@ -533,8 +533,25 @@ function exportXlsx(){
       return COLS.map(function (c){ return cellText_(c.get(r)); });
     }));
   var ws = XLSX.utils.aoa_to_sheet(data);
+
+  // Second sheet: every logged visit against a card, not just the Spent total — one row
+  // per (client, service), same shape as "What she has used it on" on each card, but for
+  // every card in lastShown at once instead of opening each one. redemptionsBy is keyed
+  // by issue_id, same map the card detail view already reads.
+  var redemptionRows = [['Serial', 'Client', 'Branch', 'Date', 'Service', 'Amount (AED)', 'Stylist']];
+  lastShown.forEach(function (r){
+    (redemptionsBy[r.id] || []).forEach(function (u){
+      redemptionRows.push([
+        r.main_serial, r.client_name, r.branch,
+        C.fmt(u.redeemed_on), u.service, Number(u.amount_aed) || 0, u.stylist || '',
+      ]);
+    });
+  });
+  var wsRed = XLSX.utils.aoa_to_sheet(redemptionRows);
+
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Voucher log');
+  XLSX.utils.book_append_sheet(wb, wsRed, 'Redemptions');
   XLSX.writeFile(wb, 'voucher-log-' + C.iso(C.today()) + '.xlsx');
 }
 
