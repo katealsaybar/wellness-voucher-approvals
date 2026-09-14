@@ -193,6 +193,7 @@ tr.det.hide{display:none;}
       <input type="search" id="q" placeholder="Search a name, a serial, a branch or who issued it" autocomplete="off">
       <label><input type="checkbox" id="showarch"> Show archived</label>
       <button class="btn ghost" id="refresh">Refresh</button>
+      <button class="btn ghost" id="exportxlsx">Save as xlsx</button>
     </div>
 
     <p class="tally" id="tally">Loading&hellip;</p>
@@ -214,6 +215,7 @@ tr.det.hide{display:none;}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="../auth/supabase-client.js"></script>
 <script src="../shared/voucher-card.js"></script>
 <script src="../shared/signin-gate.js"></script>
@@ -241,6 +243,7 @@ function db(){ return (window.TRS && window.TRS.db) || null; }
 function admin(){ return !!(window.TRS && window.TRS.isAdmin && window.TRS.isAdmin()); }
 
 var rows = [], friendsBy = {}, notesBy = {}, hasReferrals = true;
+var lastShown = []; // whatever draw() last put on screen, for the xlsx export to mirror exactly
 var redemptionsBy = {}, hasRedemptions = true;
 // Matches the check constraint on voucher_issues.payment_method (sql/voucher_payment_method.sql).
 var PAYMENT_METHODS = ['Stripe', 'Salon Payment', 'Tabby'];
@@ -283,6 +286,13 @@ var COLS = [
   {key:'credit_aed', head:'Credit', cls:'num',
    get:function(r){ return C.money(r.credit_aed); },
    sort:function(r){ return r.credit_aed; }},
+
+  {key:'redeemed_aed', head:'Spent', cls:'num',
+   // Same numeric(10,2) string-from-Postgres reasoning as remaining_aed below —
+   // redeemed_aed is a coalesce(sum(...), 0), so it's always present, but still
+   // comes back as a string, not a JS number.
+   get:function(r){ return C.money(r.redeemed_aed); },
+   sort:function(r){ return Number(r.redeemed_aed) || 0; }},
 
   {key:'remaining_aed', head:'Remaining', cls:'num',
    // Postgres numeric columns come back from Supabase as strings ("1150.00"), not JS
@@ -497,6 +507,32 @@ function draw(){
   el('none').innerHTML = shown.length ? '' :
     '<div class="empty">' + (rows.length ? 'Nothing matches that.' :
       'Nothing issued yet. Cards appear here as reception issues them.') + '</div>';
+
+  lastShown = shown;
+}
+
+// Strips the HTML each column's get() wraps its value in (tags like Voided/Archived,
+// the emirate span on Branch, the muted dash on an empty Remaining) down to plain text,
+// so the export is real cell values, not markup — reusing COLS keeps it in the exact
+// same columns and order as whatever's on screen, filtered/sorted the same way.
+function cellText_(html){
+  return String(html)
+    .replace(/<[^>]+>/g, '')
+    .replace(/&middot;/g, '·').replace(/&ndash;/g, '-').replace(/&rsaquo;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .trim();
+}
+
+function exportXlsx(){
+  var data = [COLS.map(function (c){ return c.head; })]
+    .concat(lastShown.map(function (r){
+      return COLS.map(function (c){ return cellText_(c.get(r)); });
+    }));
+  var ws = XLSX.utils.aoa_to_sheet(data);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Voucher log');
+  XLSX.writeFile(wb, 'voucher-log-' + C.iso(C.today()) + '.xlsx');
 }
 
 function rowHtml(r){
@@ -878,6 +914,7 @@ document.addEventListener('keydown', function (e){ if (e.key === 'Escape') close
 el('q').addEventListener('input', draw);
 el('showarch').addEventListener('change', draw);
 el('refresh').addEventListener('click', load);
+el('exportxlsx').addEventListener('click', exportXlsx);
 
 // This page lists client names, which is the one thing in the pack that was never ours to
 // leave on a public URL. Nothing loads until there is a session. The overlay is only the
