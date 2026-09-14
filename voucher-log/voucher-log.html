@@ -485,13 +485,16 @@ function draw(){
   var live = rows.filter(function (r){ return !r.is_archived && !r.is_voided; });
   var placed = live.reduce(function (a, r){ return a + (r.credit_aed || 0); }, 0);
   var collected = live.reduce(function (a, r){ return a + (r.paid_aed || 0); }, 0);
+  // redeemed_aed is a numeric(10,2) from Postgres, so it comes back as a string —
+  // same reasoning as the Spent column and remaining_aed elsewhere on this page.
+  var spent = live.reduce(function (a, r){ return a + (Number(r.redeemed_aed) || 0); }, 0);
   var earned = live.filter(function (r){ return r.referral_earned; }).length;
 
   el('summary').innerHTML = '<div class="sumbox">' + summaryHtml(live) + progressHtml(collected) + '</div>';
 
   el('tally').innerHTML = '<b>' + live.length + '</b> live ' + (live.length === 1 ? 'voucher' : 'vouchers') +
     ' &middot; <b>AED ' + C.money(placed) + '</b> of credit placed &middot; <b>AED ' + C.money(collected) +
-    '</b> collected &middot; <b>' + Math.round(targetPct(collected)) + '%</b> of the AED ' +
+    '</b> collected &middot; <b>AED ' + C.money(spent) + '</b> spent &middot; <b>' + Math.round(targetPct(collected)) + '%</b> of the AED ' +
     C.money(CAMPAIGN_TARGET_AED) + ' target, ' + daysLeftToTarget() + ' days left &middot; <b>' + earned + '</b> ' +
     (earned === 1 ? 'has' : 'have') + ' earned the referral credit' +
     (term ? ' &middot; showing ' + shown.length + ' for &ldquo;' + C.esc(term) + '&rdquo;' : '');
