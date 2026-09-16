@@ -34,22 +34,20 @@
   // the decision table in index.html. It is a field rather than a literal only so the copy on
   // the R card can be generated from it instead of the word "third" being typed twice.
   //
-  // KNOWN CONSEQUENCE, and it is not a bug to be fixed here. Dip Your Toes ships ONE gift
-  // card and still needs three friends, so two of her three arrive without one and get logged
-  // with gift_serial empty. That is expected on this tier, not a miscount: gift_serial is
-  // nullable for exactly this reason. Do not make it required, and do not refuse a friend for
-  // arriving without a card.
+  // KNOWN CONSEQUENCE, and it is not a bug to be fixed here. Every tier ships exactly ONE gift
+  // card now (16 Sep restructure below) but still needs three friends, so two of her three
+  // always arrive without one and get logged with gift_serial empty. That is expected, not a
+  // miscount: gift_serial is nullable for exactly this reason. Do not make it required, and do
+  // not refuse a friend for arriving without a card.
   //
-  // kit is the Home Ritual Kit ALLOWANCE, settled by Kate on 19 August at 100 / 200 / 450,
-  // Season of You corrected down from 250 in the same call. See docs/CAPS-AND-ALLOWANCES.md.
-  // It is an allowance, never a cap and never a budget she can build inside: the cheapest
-  // single item in the whole range is AED 114 against a AED 100 allowance on Dip Your Toes,
-  // so she settles a difference on every tier, every time. kitItems is what the sheet
-  // prescribes at that tier and is the only honest way to say what she is topping up towards.
+  // gift is the single Gift a friend card's value, rewritten 16 Sep 2026 alongside the checkout
+  // restructure below: it used to be one AED 100 card repeated friends times (1/3/5). Belle's
+  // checkout confirmation to Kate in Salon Coords PH PEEPS (16 Sep) makes it one card, scaled
+  // by tier instead of stacked.
   T.TIERS = {
-    D:{name:'Dip Your Toes',   places:1000, spends:1150, months:6,  friends:1, needs:3, birthday:150, birthdayWhat:'Birthday blow-dry', refer:100, kit:100, kitItems:2},
-    S:{name:'Season of You',   places:2500, spends:3000, months:9,  friends:3, needs:3, birthday:350, birthdayWhat:'Birthday facial',   refer:150, kit:200, kitItems:4},
-    V:{name:'All-In VIP Year', places:4500, spends:5400, months:12, friends:5, needs:3, birthday:750, birthdayWhat:'Birthday treat',    refer:200, kit:450, kitItems:6}
+    D:{name:'Dip Your Toes',   places:1000, spends:1150, months:6,  gift:50,  needs:3, birthday:150, birthdayWhat:'Birthday blow-dry', refer:100},
+    S:{name:'Season of You',   places:2500, spends:3000, months:9,  gift:100, needs:3, birthday:350, birthdayWhat:'Birthday facial',   refer:150},
+    V:{name:'All-In VIP Year', places:4500, spends:5400, months:12, gift:150, needs:3, birthday:750, birthdayWhat:'Birthday treat',    refer:200}
   };
 
   // The back of the card names the salons rather than the emirate, because "Abu Dhabi salons"
@@ -175,38 +173,49 @@
   };
 
   /* ---------- one buyer's whole set ---------- */
-  // One buyer, one sequence, one running suffix. Reception holds a single number for the main
-  // card and reads the rest off it by counting up.
+  // FOUR vouchers at checkout, rewritten 16 Sep 2026 off Belle's message to Kate in
+  // Salon Coords PH PEEPS: "Bale mgging 4 voucher na ang iccheck out per client" — Wellness
+  // voucher (what she placed), Bonus credit (what gets added on top), Gift card to a friend
+  // (now one card, scaled by tier, not a stack of AED 100s), Birthday treat. Kate confirmed
+  // "korek". The referral credit is a fifth card, same as before: it is not part of the
+  // checkout four because it cannot be printed until earned.
+  //
+  // Numbering is fixed across all three tiers now, because the gift card is no longer stacked
+  // 1/3/5: Wellness (no suffix), Bonus -1, Gift -2, Birthday -3, Refer -4.
   //
   // alloc carries {seq, mainExpiry, friendExpiry, live, id}. When it came from Postgres the
   // dates are the ones stored against the serial, so the card shows exactly what the log
   // holds rather than a second calculation that could drift from it.
   T.buildSet = function (branch, tier, name, purchase, alloc) {
-    var t = T.TIERS[tier], seq = alloc.seq, cards = [], i, n = 0;
+    var t = T.TIERS[tier], seq = alloc.seq, cards = [], n = 0;
     var mainExpiry = alloc.mainExpiry, friendExpiry = alloc.friendExpiry;
 
     cards.push({
-      type:'M', label:'Main card', serial:T.serialOf(tier,branch,seq),
+      type:'M', label:'Wellness voucher', serial:T.serialOf(tier,branch,seq),
       face:T.faceGroups(tier,branch,seq),
-      lead:t.name, value:t.spends, valueLabel:'Credit',
+      lead:t.name, value:t.places, valueLabel:'Wellness credit',
       expiry:mainExpiry, printable:true
     });
 
-    for (i = 1; i <= t.friends; i++) {
-      // Dip Your Toes ships a single card, where "Card 1 of 1" and "All 1 carry the same
-      // expiry" both read as a bug at the desk. One card gets neither line.
-      n++;
-      cards.push({
-        type:'G', label:t.friends === 1 ? 'Gift card' : 'Gift ' + i,
-        serial:T.serialOf(tier,branch,seq,n),
-        face:T.faceGroups(tier,branch,seq,n),
-        gift:true, value:100, valueLabel:'Gift credit',
-        expiry:friendExpiry, printable:true,
-        of:t.friends === 1 ? null : 'Card ' + i + ' of ' + t.friends,
-        note:'Two months from <b>her</b> purchase date, not from the day she hands it over.' +
-             (t.friends === 1 ? '' : ' All ' + t.friends + ' carry the same expiry.')
-      });
-    }
+    n++;
+    cards.push({
+      type:'C', label:'Bonus credit', serial:T.serialOf(tier,branch,seq,n),
+      face:T.faceGroups(tier,branch,seq,n),
+      lead:'Added on top of your Wellness voucher', value:t.spends - t.places,
+      valueLabel:'Bonus credit',
+      expiry:mainExpiry, printable:true,
+      note:'She places the first number, on the Wellness voucher. This is the difference, ' +
+           'added on top. Same clock as the Wellness voucher.'
+    });
+
+    n++;
+    cards.push({
+      type:'G', label:'Gift card', serial:T.serialOf(tier,branch,seq,n),
+      face:T.faceGroups(tier,branch,seq,n),
+      gift:true, value:t.gift, valueLabel:'Gift credit',
+      expiry:friendExpiry, printable:true,
+      note:'Two months from <b>her</b> purchase date, not from the day she hands it over.'
+    });
 
     n++;
     cards.push({
@@ -216,7 +225,7 @@
       valueLabel:'Birthday treat',
       expiry:mainExpiry, printable:true,
       note:'Usable <b>any time</b> inside her voucher validity, not only in her birthday ' +
-           'month. Same clock as the main card.'
+           'month. Same clock as the Wellness voucher.'
     });
 
     n++;
@@ -328,7 +337,8 @@
 
     // c.label is reception's word for the card, and "Main card" and "Birthday" are the wrong
     // words to hand a client. She is not filing them, she is being given them.
-    var CLIENT_NAME = { M:'Your card', B:T.birthdayTreat(set.tier, b.emirate), R:'Referral credit' };
+    var CLIENT_NAME = { M:'Wellness voucher', C:'Bonus credit',
+                        B:T.birthdayTreat(set.tier, b.emirate), R:'Referral credit' };
     var list = cards.map(function (c) {
       return '<li><b>' + T.esc(CLIENT_NAME[c.type] || c.label) + '</b>, AED ' + T.money(c.value) +
              (c.expiry ? ', until ' + T.fmt(c.expiry) : '') + '</li>';
@@ -467,22 +477,22 @@
     window.print();
   };
 
-  // HER file: the cards that are hers on the day she pays, behind a cover. The main card
-  // and the birthday card, and nothing else.
+  // HER file: the cards that are hers on the day she pays, behind a cover. The Wellness
+  // voucher, the Bonus credit and the birthday card, and nothing else.
   //
-  // NOT the gift cards. There used to be one button that put all eight in one file, and it was
-  // the shortest path to a leak in the pack: she forwards that file to a friend, because it is
-  // the only file she has, and the friend opens it holding her balance and the other four gift
-  // serials, any of which she could then spend. One file per friend costs reception a second
-  // Save and closes it.
+  // NOT the gift card. There used to be one button that put the whole set in one file, and it
+  // was the shortest path to a leak in the pack: she forwards that file to a friend, because it
+  // is the only file she has, and the friend opens it holding her balance and the gift serial,
+  // which they could then spend. One file per friend costs reception a second Save and closes
+  // it.
   //
   // NOT the referral card either, and that one is a timing decision rather than a privacy one.
   // It does not exist on the day she pays: the clock starts when her third friend has visited
-  // AND paid, so it is a later delivery. Bundling it here would mean her file held two cards on
-  // Monday and three in November, which is the kind of quiet difference nobody can support.
+  // AND paid, so it is a later delivery. Bundling it here would mean her file held three cards on
+  // Monday and four in November, which is the kind of quiet difference nobody can support.
   T.printHers = function (set) {
     var hers = set.cards.filter(function (c) {
-      return c.printable && (c.type === 'M' || c.type === 'B');
+      return c.printable && (c.type === 'M' || c.type === 'C' || c.type === 'B');
     });
     T.print(set, hers,
       'WV-' + set.branch + '-' + T.pad4(set.seq) + ' ' + set.name + ' wellness voucher', true);
