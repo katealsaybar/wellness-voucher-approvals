@@ -193,7 +193,7 @@
     var mainExpiry = alloc.mainExpiry, friendExpiry = alloc.friendExpiry;
 
     cards.push({
-      type:'M', label:'Main card', serial:T.serialOf(tier,'M',branch,seq),
+      type:'M', label:'Main card', serial:T.serialOf(tier,'M',branch,seq,1),
       face:T.faceGroups(tier,'M',branch,seq),
       lead:t.name, value:t.spends, valueLabel:'Credit',
       expiry:mainExpiry, printable:true
@@ -215,7 +215,7 @@
     }
 
     cards.push({
-      type:'B', label:'Birthday', serial:T.serialOf(tier,'B',branch,seq),
+      type:'B', label:'Birthday', serial:T.serialOf(tier,'B',branch,seq,1),
       face:T.faceGroups(tier,'B',branch,seq),
       lead:T.birthdayTreat(tier, T.BRANCHES[branch].emirate), value:t.birthday,
       valueLabel:'Birthday treat',
@@ -253,7 +253,7 @@
     // gates the KIT, it just no longer gates the card that tells her about it.
     cards.push({
       type:'K', label:'Home Ritual Kit',
-      serial:T.serialOf(tier,'K',branch,seq),
+      serial:T.serialOf(tier,'K',branch,seq,1),
       face:T.faceGroups(tier,'K',branch,seq),
       lead:'Towards your Home Ritual Kit', value:t.kit, valueLabel:'Kit allowance',
       expiry:mainExpiry, printable:true,
@@ -268,7 +268,7 @@
     });
 
     cards.push({
-      type:'R', label:'Refer a friend', serial:T.serialOf(tier,'R',branch,seq),
+      type:'R', label:'Refer a friend', serial:T.serialOf(tier,'R',branch,seq,1),
       face:T.faceGroups(tier,'R',branch,seq),
       lead:'Thank you for the introduction', value:t.refer, valueLabel:'Referral credit',
       expiry:alloc.referralExpiry || null,
