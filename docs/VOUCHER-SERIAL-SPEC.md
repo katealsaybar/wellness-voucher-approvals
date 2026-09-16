@@ -1,14 +1,14 @@
 # Wellness Voucher · Serial Naming System
 
-**Status:** proposed, 20 Aug 2026 · Kate · **`K` added 24 Aug 2026**
+**Status:** proposed, 20 Aug 2026 · Kate · **`K` added 24 Aug 2026, removed 16 Sep 2026** · **type letter dropped 16 Sep 2026**
 **Supersedes:** the `AEWVDYT-AUH-2026-0001` scheme recorded under "Card numbering, already built" in `index.html`. That scheme was a draft written by Kate, not a convention set by Belle, and it covered the tier card only. The attribution in `index.html` was corrected on 20 Aug.
 **Reads from:** the nine Phorest gift card products (Decision 13) and the three validity clocks (19 Aug).
 
 ---
 
-## 1. What the 15 cards actually are
+## 1. What the cards actually are
 
-Three tiers times five card types. The pack's "nine gift card products" counts only what Phorest holds; the refer-a-friend credit and the kit allowance are business adjustments, so they have artwork but no Phorest product.
+Three tiers times four card types. **`K`, the Home Ritual Kit card, was removed 16 Sep 2026** — Kate's call, in the same message that dropped the type letter (section 2). The allowance itself is untouched; it just no longer has a printed card of its own in this set. If it needs to come back as a card, treat it as a new decision, not a revert.
 
 | | Dip Your Toes | Season of You | All-In VIP Year |
 |---|---|---|---|
@@ -16,56 +16,52 @@ Three tiers times five card types. The pack's "nine gift card products" counts o
 | **G** · Gift a friend | AED 100 x 1 | AED 100 x 3 | AED 100 x 5 |
 | **B** · Birthday card | Blow-dry, AED 150 | AED 350 | AED 750 |
 | **R** · Refer a friend | + AED 100 | + AED 150 | + AED 200 |
-| **K** · Home Ritual Kit | AED 100 towards | AED 200 towards | AED 450 towards |
 
-Fifteen artworks. But because the friend card is a stack of individual AED 100 cards, one buyer walks out with more than five:
+Because the friend card is a stack of individual AED 100 cards, one buyer walks out with more than four:
 
 | Tier | Cards issued to one buyer |
 |---|---|
-| Dip Your Toes | 5 (1M + 1G + 1B + 1R + 1K) |
-| Season of You | 7 (1M + 3G + 1B + 1R + 1K) |
-| All-In VIP Year | 9 (1M + 5G + 1B + 1R + 1K) |
-
-**Why `K` exists at all.** The kit allowance was settled on 19 August at AED 100 / 200 / 450 and then had nowhere to live: it was the one thing a client bought that she was never handed. The only place the number was ever stated was reception's mouth at the till, against a standing rule that she must say it *before* the bag is packed. A card says it first, and it says the harder half too, that this is an allowance she tops up rather than a kit she has already paid for.
+| Dip Your Toes | 4 (1M + 1G + 1B + 1R) |
+| Season of You | 6 (1M + 3G + 1B + 1R) |
+| All-In VIP Year | 8 (1M + 5G + 1B + 1R) |
 
 ---
 
 ## 2. The format
 
 ```
-WV-<tier><type>-<branch>-<seq>[-<n>]
+WV-<tier>M-<branch>-<seq>[-<n>]
 ```
 
-`WV-SM-KCA-0042`
+`WV-VM-SAA-0003` (main card) · `WV-VM-SAA-0003-1` (her first other card)
+
+**Rewritten 16 Sep 2026.** The type letter used to vary per card (`M`/`G`/`B`/`R`/`K`, section 2 in the original version of this doc). Kate corrected that: a letter changing in the middle of the code was more confusing at the till than a plain running number at the end, and the card's own printed label already says what it is (Gift 1, Birthday, Refer a friend). So the middle block is now always `M`, and it no longer means "Main" specifically — it is fixed for every card in the set.
 
 | Block | Values | Why it is in the code |
 |---|---|---|
 | `WV` | fixed | Wellness Voucher. Keeps this campaign from colliding with the next one. |
 | `<tier>` | `D` `S` `V` | Dip Your Toes · Season of You · All-In VIP Year. Reception sees the tier without opening anything. |
-| `<type>` | `M` `G` `B` `R` `K` | Main · Gift · Birthday · Refer · Kit. **This is the block the old scheme was missing.** |
+| `M` | fixed | No longer a type code. Kept only because it was the base identity already, and changing it would ripple further than the fix needed to. |
 | `<branch>` | `SAA` `KCA` `AQ` `MC` | The branch that **issued** it. Already the estate's codes, so the log joins to branch reporting. |
 | `<seq>` | `0001`–`9999` | Per branch. One number per **buyer**, not per card. |
-| `<n>` | `1`–`5`, on `G` only | Which friend card in her stack. |
+| `<n>` | `1`–`7` | Absent on the main card. Every other card in the set gets one, counting straight through in a fixed order — gifts first, then birthday, then refer — with no restart between types. |
 
 ---
 
-## 3. One buyer, one number
-
-The single most useful rule here: **all of a buyer's cards share her sequence number.** The type letter is the only thing that changes.
+## 3. One buyer, one number, one running count
 
 Sara buys Season of You at Khalifa City A and she is the 42nd voucher that branch has sold:
 
 ```
 WV-SM-KCA-0042      her main card, AED 3,000 credit
-WV-SG-KCA-0042-1    friend card 1, AED 100
-WV-SG-KCA-0042-2    friend card 2, AED 100
-WV-SG-KCA-0042-3    friend card 3, AED 100
-WV-SB-KCA-0042      her birthday card, AED 350
-WV-SR-KCA-0042      her refer-a-friend credit, AED 150
-WV-SK-KCA-0042      her Home Ritual Kit allowance, AED 200 towards
+WV-SM-KCA-0042-1    friend card 1, AED 100
+WV-SM-KCA-0042-2    friend card 2, AED 100
+WV-SM-KCA-0042-3    friend card 3, AED 100
+WV-SM-KCA-0042-4    her birthday card, AED 350
+WV-SM-KCA-0042-5    her refer-a-friend credit, AED 150
 ```
 
-Seven cards, one number to remember. This is the same reasoning behind Kate's 19 Aug call to make both short clocks two months: reception holds one number, not several. When a friend walks in with `WV-SG-KCA-0042-2`, reception reads `0042` and lands on Sara without a search.
+Six cards, one number to remember and a count to five. This is the same reasoning behind Kate's 19 Aug call to make both short clocks two months: reception holds one number, not several. The card's own label (printed on its face) says which one it is; the serial only has to say it is hers and which of her cards this one is.
 
 ---
 
@@ -99,13 +95,11 @@ Length dropped from 21 characters to 14. It is typed by hand at a till, sometime
 ## 6. Operational rules
 
 1. **Never reuse a sequence.** A refunded or voided voucher is struck in the log and its number retires with it. Gaps are fine; a reused number is not.
-2. **The R card cannot be printed at purchase.** Its clock starts when the third new client has visited *and paid*, so its "valid until" is unknowable at the till. It carries the buyer's sequence but is issued later, when the referral completes. Three of her four card types print at purchase; this one does not.
+2. **The R card cannot be printed at purchase.** Its clock starts when the third new client has visited *and paid*, so its "valid until" is unknowable at the till. It carries the buyer's sequence and its own `-n`, reserved in order even though it is issued later, when the referral completes.
 3. **The R card has no Phorest product.** It is a business adjustment. Its serial exists in the log and on the artwork, not as a gift card in Phorest.
-4. **The K card has no Phorest product either**, and for a different reason: it is an allowance against a home care bag, not credit she can spend. Reception totals the bag at shelf value, takes the allowance off, and takes the difference. Nothing depletes, so there is nothing for Phorest to hold.
-5. **The K card is the only one that spends on home care, and the only one that cannot spend on a service.** Every other card in the set is the other way round. That inversion is on the back of the card, because the shared rules block would otherwise tell her the card is not valid on the one thing it buys.
-6. **The other cards' backs no longer say "retail products"** (24 Aug). They read "Not valid on home care or another voucher". Naming home care as retail is against Tara's 16 July ruling, and it was doing it in client-facing print inside the same PDF as a card that treats home care as prescribed care. Nothing is narrowed: "home care" is the pack's own term for the same things, and it is the term the published terms use.
-7. **Friend cards number in issue order**, `-1` upward, not by which friend gets which.
-8. **One buyer buying twice gets two sequences.** Two separate sets.
+4. **The cards' backs read "Not valid on home care or another voucher"** (24 Aug). Naming home care as retail is against Tara's 16 July ruling, and the wording used to do that in client-facing print. "Home care" is the pack's own term for the same things, and it is the term the published terms use.
+5. **Friend cards number in issue order**, counting straight into the birthday and refer suffixes after them, not by which friend gets which.
+6. **One buyer buying twice gets two sequences.** Two separate sets.
 
 ---
 
@@ -113,15 +107,15 @@ Length dropped from 21 characters to 14. It is typed by hand at a till, sometime
 
 This is what the print interface fills, and it is what makes Belle's 19 Aug requirement work: *"ilagay nio n din sa e-voucher ung validity saka date of purchase ung editable sa side nmin"*. Flat JPG exports cannot satisfy this. Live text over the artwork can.
 
-| Field | M | G | B | R | K |
-|---|---|---|---|---|---|
-| Serial | yes | yes | yes | yes | yes |
-| Client name | yes | blank, friend writes it | yes | yes | yes |
-| Gifted by | no | yes, buyer's name | no | no | no |
-| Value | yes | AED 100 | yes | yes | yes, and it reads *towards* |
-| Date of purchase | yes | yes, buyer's purchase date | yes | date referral completed | yes |
-| Valid until | yes | yes | yes | yes, filled on completion | yes |
-| Issuing branch | yes | yes | yes | yes | yes |
+| Field | M | G | B | R |
+|---|---|---|---|---|
+| Serial | yes | yes | yes | yes |
+| Client name | yes | blank, friend writes it | yes | yes |
+| Gifted by | no | yes, buyer's name | no | no |
+| Value | yes | AED 100 | yes | yes |
+| Date of purchase | yes | yes, buyer's purchase date | yes | date referral completed |
+| Valid until | yes | yes | yes | yes, filled on completion |
+| Issuing branch | yes | yes | yes | yes |
 
 **Valid until, computed:**
 
@@ -131,7 +125,6 @@ This is what the print interface fills, and it is what makes Belle's 19 Aug requ
 | `G` | purchase + 2 months, from **her** purchase date, not the day she hands it over |
 | `B` | same as `M`. Usable any time inside the main voucher's validity, not gated to her birthday month. Confirmed 20 Aug. |
 | `R` | referral completion + 2 months |
-| `K` | same as `M`, and this is **ruled on, not derived**: term 8 of the published terms says any unused part of the allowance "ends with the validity period of your voucher". |
 
 ---
 
@@ -142,6 +135,11 @@ This is what the print interface fills, and it is what makes Belle's 19 Aug requ
 1. **The birthday card is not gated to her birthday.** The blow-dry, or the AED 350 or AED 750, is usable any time inside the main voucher's validity period. It therefore runs on the tier card's clock, 6/9/12 months from purchase, and needs no clock of its own. This closes the gap left by the three validity clocks agreed on 19 August.
 2. **`index.html` attribution corrected.** The scheme is recorded as Kate's draft, not Belle's convention.
 3. **The old scheme is replaced** in `index.html`, with the superseded table kept in place per the pack's house style.
+
+**Settled 16 September:**
+
+5. **The type letter is gone, replaced by one running `-n`.** A same-day correction of an earlier attempt at this that kept the letter and gave every card its own `-1` — Kate: no letters, just one number, counting straight through the whole set (gifts, then birthday, then refer). The main card is the bare base serial; nothing else printed for a buyer is. Landed in `T.serialOf` / `T.faceGroups` / `T.buildSet` in `shared/voucher-card.js`. The log table's `main_serial` and the SQL views (`voucher_mapping.sql`, `voucher_referrals.sql`, `voucher_payment_method.sql`, `voucher_redemptions.sql`) still compute the shorter `WV-<tier>M-<branch>-<seq>` — that string is a per-buyer lookup key across those views, not a printed card serial, and was left alone.
+6. **The Home Ritual Kit card (`K`) is removed from the printed set.** Same message from Kate. The allowance itself, its terms, its emails and its automations are untouched — only the card artwork/tab in `T.buildSet` is gone, along with the now-dead kit-only branches in `renderCover`, `renderBack` and `cardTheme`.
 
 **Still open:**
 

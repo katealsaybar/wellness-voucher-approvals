@@ -92,12 +92,6 @@
   // campaign landing page and the printed line said the same, so a client who scanned and a
   // client who typed both landed on the sales page rather than the terms she was pointed at.
   // Both now end at /terms/, and assets/qr-terms-*.svg were reminted to match on 21 August.
-  // The Confidence Mapping. One constant, used by the cover in text and by
-  // assets/qr-confidence-mapping.svg as a code: if this ever moves, the SVG has to be reminted
-  // in the same pass or the printed line and the scan go to two different places, which is
-  // exactly the fault the terms QR had before 21 August.
-  T.MAPPING_URL  = 'https://www.tararosesalon.com/en/ae/confidence-mapping/';
-  T.MAPPING_PATH = 'tararosesalon.com/en/ae/confidence-mapping';
 
   T.termsPath = function (emirate) {
     return 'tararosesalon.com/en/ae/wellness-voucher/' + T.emirateSlug(emirate) + '/terms';
@@ -157,12 +151,8 @@
   //
   // The two light cards cannot use the white wordmark or the black card's palette, so the theme
   // carries both decisions: the class the CSS themes off, and which logo file to load.
-  // The kit card (K) is the fifth, added 24 August, and it has NO Hanneh artwork behind it:
-  // her deck was drawn when the set was four cards. The sage below is this file's choice, made
-  // to sit beside her taupe and her lilac rather than to match a page she has not drawn. If she
-  // draws one, hers replaces it and only .card.wv-t-K in the CSS changes.
   T.cardTheme = function (card) {
-    var light = card.type === 'R' || card.type === 'B' || card.type === 'K';
+    var light = card.type === 'R' || card.type === 'B';
     return {
       cls: ' wv-t-' + card.type + (light ? ' wv-light' : ''),
       logo: light ? 'tara-rose-logo-black.png' : 'tara-rose-logo-card.png'
@@ -170,31 +160,34 @@
   };
 
   /* ---------- the serial ---------- */
-  // WV-<tier><type>-<branch>-<seq>[-<n>] for the log, Phorest and the small print. The card
-  // face prints the same thing in four groups, which is how it reads as a card number
-  // without being encoded down into digits that need a lookup table to read back.
-  T.serialOf = function (tier, type, branch, seq, n) {
-    var s = 'WV-' + tier + type + '-' + branch + '-' + T.pad4(seq);
+  // WV-<tier>M-<branch>-<seq>[-<n>], settled 16 Sep 2026. The type letter used to change per
+  // card (M/G/B/R/K); Kate corrected that back to always M, because two cards from the same
+  // buyer telling apart by a letter in the middle was more confusing at the till than a running
+  // number at the end, and the card's own label already says what it is. So the main card is
+  // the bare base serial, and every other card in her set gets a running -n, counting straight
+  // through gifts, then birthday, then refer (no per-type restart).
+  T.serialOf = function (tier, branch, seq, n) {
+    var s = 'WV-' + tier + 'M-' + branch + '-' + T.pad4(seq);
     return n ? s + '-' + n : s;
   };
-  T.faceGroups = function (tier, type, branch, seq) {
-    return ['WV', tier + type, branch, T.pad4(seq)];
+  T.faceGroups = function (tier, branch, seq, n) {
+    return ['WV', tier + 'M', branch, T.pad4(seq) + (n ? '-' + n : '')];
   };
 
   /* ---------- one buyer's whole set ---------- */
-  // One buyer, one sequence. The type letter is the only thing that changes, so reception
-  // holds a single number for all five, seven or nine cards.
+  // One buyer, one sequence, one running suffix. Reception holds a single number for the main
+  // card and reads the rest off it by counting up.
   //
   // alloc carries {seq, mainExpiry, friendExpiry, live, id}. When it came from Postgres the
   // dates are the ones stored against the serial, so the card shows exactly what the log
   // holds rather than a second calculation that could drift from it.
   T.buildSet = function (branch, tier, name, purchase, alloc) {
-    var t = T.TIERS[tier], seq = alloc.seq, cards = [], i;
+    var t = T.TIERS[tier], seq = alloc.seq, cards = [], i, n = 0;
     var mainExpiry = alloc.mainExpiry, friendExpiry = alloc.friendExpiry;
 
     cards.push({
-      type:'M', label:'Main card', serial:T.serialOf(tier,'M',branch,seq,1),
-      face:T.faceGroups(tier,'M',branch,seq),
+      type:'M', label:'Main card', serial:T.serialOf(tier,branch,seq),
+      face:T.faceGroups(tier,branch,seq),
       lead:t.name, value:t.spends, valueLabel:'Credit',
       expiry:mainExpiry, printable:true
     });
@@ -202,10 +195,11 @@
     for (i = 1; i <= t.friends; i++) {
       // Dip Your Toes ships a single card, where "Card 1 of 1" and "All 1 carry the same
       // expiry" both read as a bug at the desk. One card gets neither line.
+      n++;
       cards.push({
         type:'G', label:t.friends === 1 ? 'Gift card' : 'Gift ' + i,
-        serial:T.serialOf(tier,'G',branch,seq,i),
-        face:T.faceGroups(tier,'G',branch,seq),
+        serial:T.serialOf(tier,branch,seq,n),
+        face:T.faceGroups(tier,branch,seq,n),
         gift:true, value:100, valueLabel:'Gift credit',
         expiry:friendExpiry, printable:true,
         of:t.friends === 1 ? null : 'Card ' + i + ' of ' + t.friends,
@@ -214,9 +208,10 @@
       });
     }
 
+    n++;
     cards.push({
-      type:'B', label:'Birthday', serial:T.serialOf(tier,'B',branch,seq,1),
-      face:T.faceGroups(tier,'B',branch,seq),
+      type:'B', label:'Birthday', serial:T.serialOf(tier,branch,seq,n),
+      face:T.faceGroups(tier,branch,seq,n),
       lead:T.birthdayTreat(tier, T.BRANCHES[branch].emirate), value:t.birthday,
       valueLabel:'Birthday treat',
       expiry:mainExpiry, printable:true,
@@ -224,52 +219,10 @@
            'month. Same clock as the main card.'
     });
 
-    // THE HOME RITUAL KIT ALLOWANCE, as a card. The allowance has existed since 19 August but
-    // had no object in her hand, so the only place it was ever stated was reception's mouth at
-    // the till, and the pack's own rule is that reception says the number BEFORE the bag is
-    // packed. A card says it before anybody says anything.
-    //
-    // The wording is not free here. The kit is never called retail, products or an extra: it is
-    // home care, and the locked copy rule is TOWARDS her Home Ritual Kit, never "your kit". That
-    // is not a style preference, it is arithmetic: the cheapest single item in the whole
-    // thirty-five-product range is AED 114 against a AED 100 allowance, so at Dip Your Toes
-    // there is no build that fits inside the allowance at all. A card promising "your kit"
-    // would be the one printed thing contradicting the till.
-    //
-    // THE EXPIRY IS RULED ON, not derived. The Home Ritual Kit clause in the published terms
-    // says any unused part of the allowance "ends with the validity period of your voucher", so
-    // the main card's clock is the terms' own answer rather than this file's guess. See term 8 on
-    // website-mockups/terms/terms.html.
-    //
-    // IT GOES OUT ON THE DAY SHE PAYS, and it did not always: until 25 August the card was
-    // held back until someone ticked a mapping box in the log, because the kit is matched to
-    // her at the Confidence Mapping and cannot be made up before it. Belle overturned that
-    // from the desk on 25 August, and her reasoning stands here so nobody restores the gate
-    // thinking it was lost by accident: a welcome file that lists every inclusion is the thing
-    // the client is happy to receive, a card held back is a reminder job the branch will not
-    // reliably do, and the client herself cannot ask about a card she has never seen. So the
-    // card ships with the file and CARRIES its own condition instead: the cover says the
-    // mapping comes first, and the card's back leads with it, QR and all. The mapping still
-    // gates the KIT, it just no longer gates the card that tells her about it.
+    n++;
     cards.push({
-      type:'K', label:'Home Ritual Kit',
-      serial:T.serialOf(tier,'K',branch,seq,1),
-      face:T.faceGroups(tier,'K',branch,seq),
-      lead:'Towards your Home Ritual Kit', value:t.kit, valueLabel:'Kit allowance',
-      expiry:mainExpiry, printable:true,
-      note:'An <b>allowance, not a budget</b>. Total the kit at shelf value, take AED ' +
-           T.money(t.kit) + ' off, and she settles the difference when she collects it. ' +
-           'Say the number before the kit is made up, never after, and tell her she can ask ' +
-           'for the fewest items that will work. Same clock as the main card. ' +
-           '<b>Her kit still waits on her Confidence Mapping</b>: it is matched to her ' +
-           'there and cannot be made up before her answers are in the <b>info@</b> inbox. ' +
-           'The card and her cover both tell her so, and the card cannot be redeemed until ' +
-           'it is done.'
-    });
-
-    cards.push({
-      type:'R', label:'Refer a friend', serial:T.serialOf(tier,'R',branch,seq,1),
-      face:T.faceGroups(tier,'R',branch,seq),
+      type:'R', label:'Refer a friend', serial:T.serialOf(tier,branch,seq,n),
+      face:T.faceGroups(tier,branch,seq,n),
       lead:'Thank you for the introduction', value:t.refer, valueLabel:'Referral credit',
       expiry:alloc.referralExpiry || null,
       printable:!!alloc.referralExpiry,
@@ -375,39 +328,11 @@
 
     // c.label is reception's word for the card, and "Main card" and "Birthday" are the wrong
     // words to hand a client. She is not filing them, she is being given them.
-    var CLIENT_NAME = { M:'Your card', B:T.birthdayTreat(set.tier, b.emirate), R:'Referral credit',
-                        K:'Towards your Home Ritual Kit' };
+    var CLIENT_NAME = { M:'Your card', B:T.birthdayTreat(set.tier, b.emirate), R:'Referral credit' };
     var list = cards.map(function (c) {
       return '<li><b>' + T.esc(CLIENT_NAME[c.type] || c.label) + '</b>, AED ' + T.money(c.value) +
              (c.expiry ? ', until ' + T.fmt(c.expiry) : '') + '</li>';
     }).join('');
-
-    // The one number on this page she has not been told yet, and the only one that costs her
-    // money later. The kit allowance is not the kit: at every tier the honest build is above
-    // the allowance, so she settles a difference on collection. Reception is already required
-    // to say that before the bag is packed; putting it in writing means the card and the desk
-    // say the same thing, and she reads it before she is standing there.
-    // The kit card is in this file from day one (25 August, Belle's call), so this section's
-    // job changed with it: it used to tell her a card was coming, now it is the disclaimer
-    // that the card in her hand cannot be redeemed before the mapping is done. The heading
-    // stays "comes first" because that is still true of the mapping, whatever the card does.
-    // NOT "One thing to do first". The friends section two below already carries
-    // "One thing to do now", and two near-identical headings on one page make her
-    // decide which of them is the real instruction.
-    var kitCard = set.cards.filter(function (c) { return c.type === 'K'; })[0];
-    var kit = '';
-    if (kitCard) {
-      kit = '<h2>Your kit allowance</h2>' +
-        '<p>AED ' + T.money(kitCard.value) + ' comes off the total when you collect your Home ' +
-        'Ritual Kit. It covers part of the kit rather than all of it, so anything above ' +
-        'that you settle on the day. If you would rather keep it small, say so before your ' +
-        'kit is made up and we will build it to the fewest items that will work.</p>' +
-        '<h2>Your Confidence Mapping comes first</h2>' +
-        '<p>Your kit card is in this file, but your kit is matched to you at your ' +
-        '<b>Confidence Mapping</b>, so the card cannot be redeemed before that is done. ' +
-        'It takes a few minutes: <b>' + T.MAPPING_PATH + '</b>, or scan the code on the ' +
-        'back of the card. We will tell you the number before anything is made up.</p>';
-    }
 
     // One file per friend is a privacy decision, not a filing preference, so it is explained
     // rather than left for her to notice.
@@ -436,7 +361,6 @@
         T.esc(T.salonsIn(b.emirate).join(' and ')) + '.</div>' +
       '<h2>In this file</h2>' +
       '<ul>' + list + '</ul>' +
-      kit +
       friends +
       refer +
       '<div class="wv-foot">' +
@@ -470,37 +394,13 @@
 
     var theme = T.cardTheme(card);
 
-    // Every other card in the set spends on services and cannot touch home care. The kit card is
-    // the one that spends the other way, so it cannot carry the shared rules: line one of them
-    // would tell her the card is not valid on the only thing it buys.
-    //
-    // Line one used to read "not valid on home care, RETAIL PRODUCTS or another voucher", which
-    // named home care as retail in client-facing print, in the same PDF as a card whose whole job
-    // is to treat it as prescribed care. Tara's 16 July ruling is that the client never thought it
-    // was retail, so the word only introduces the idea. "Home care" is the pack's own term for the
-    // same things and the published terms use it, so nothing is narrowed by dropping it.
-    //
-    // THREE clauses on the kit card, same as the others, and the first one is the QR's job:
-    // the code goes to the Confidence Mapping, not to the terms, because the mapping is the
-    // thing standing between her and the kit. The old first two are merged rather than a
-    // fourth line added; voucher-card.css says three and never four, and it is right.
-    var rules = card.type === 'K'
-      ? ['Scan the code to do your Confidence Mapping first. Your kit is matched to you there, so this card cannot be redeemed until it is done.',
-         'Home care only. Not valid on services or as credit, and it is an allowance towards the kit, not the full price of it.',
-         'Anything above the allowance is settled on collection. No cash value, no change given, and no refund on any unused part.']
-      : ['Eligible salon services only. Not valid on home care or another voucher.',
+    var rules = ['Eligible salon services only. Not valid on home care or another voucher.',
          'No cash value. Cannot be exchanged or refunded, and cannot be combined with another offer.',
          'Subject to appointment availability. Standard booking and cancellation policies apply.'];
 
-    // Which code this card carries, and where it points. Every other card sends her to the
-    // terms, which is the only thing she might want to look up. The kit card sends her to the
-    // Confidence Mapping instead: she cannot collect the kit until it is done, so a terms link
-    // would be the less useful of the two on the one card that has a step attached to it. The
-    // terms are still on this face, printed along the bottom.
-    var kit = card.type === 'K';
-    var qrFile = kit ? 'qr-confidence-mapping.svg' : 'qr-terms-' + slug + '.svg';
-    var qrAlt  = kit ? 'Scan to do your Confidence Mapping' : 'Scan for the full terms';
-    var qrCap  = kit ? 'Do this first' : 'Scan for the full terms';
+    var qrFile = 'qr-terms-' + slug + '.svg';
+    var qrAlt  = 'Scan for the full terms';
+    var qrCap  = 'Scan for the full terms';
 
     return '' +
     '<div class="card back' + theme.cls + (extraClass ? ' ' + extraClass : '') + '">' +
@@ -567,9 +467,8 @@
     window.print();
   };
 
-  // HER file: the cards that are hers on the day she pays, behind a cover. The main card,
-  // the birthday card and the kit card (in the file since 25 August, with its mapping
-  // condition printed on it), and nothing else.
+  // HER file: the cards that are hers on the day she pays, behind a cover. The main card
+  // and the birthday card, and nothing else.
   //
   // NOT the gift cards. There used to be one button that put all eight in one file, and it was
   // the shortest path to a leak in the pack: she forwards that file to a friend, because it is
@@ -583,7 +482,7 @@
   // Monday and three in November, which is the kind of quiet difference nobody can support.
   T.printHers = function (set) {
     var hers = set.cards.filter(function (c) {
-      return c.printable && (c.type === 'M' || c.type === 'B' || c.type === 'K');
+      return c.printable && (c.type === 'M' || c.type === 'B');
     });
     T.print(set, hers,
       'WV-' + set.branch + '-' + T.pad4(set.seq) + ' ' + set.name + ' wellness voucher', true);
@@ -591,7 +490,7 @@
 
   // Any one card on its own: a friend's gift card, or her referral card when she has earned it.
   // The gift name is written for the person it is forwarded TO, who never saw the till and should
-  // not receive a file called WV-VG-KCA-0042-1.
+  // not receive a file called WV-VM-KCA-0042-1.
   T.printOne = function (set, card) {
     var name = card.gift
       ? 'Gift card from ' + set.name + ' ' + card.serial
