@@ -44,10 +44,16 @@
   // restructure below: it used to be one AED 100 card repeated friends times (1/3/5). Belle's
   // checkout confirmation to Kate in Salon Coords PH PEEPS (16 Sep) makes it one card, scaled
   // by tier instead of stacked.
+  //
+  // refer flattened to AED 50 on every tier, 18 Sep 2026: the live wellness-voucher page
+  // (tararose83.github.io/tara-rose-pages/wellness-voucher) pays "when she visits with it, your
+  // credit grows" as +AED 50 across all three tiers, not the tiered +100/150/200 this file had.
+  // docs/VOUCHER-SERIAL-SPEC.md and cheat-sheets/reception.html still show the old tiered
+  // figures and need the same correction.
   T.TIERS = {
-    D:{name:'Dip Your Toes',   places:1000, spends:1150, months:6,  gift:50,  needs:3, birthday:150, birthdayWhat:'Birthday blow-dry', refer:100},
-    S:{name:'Season of You',   places:2500, spends:3000, months:9,  gift:100, needs:3, birthday:350, birthdayWhat:'Birthday facial',   refer:150},
-    V:{name:'All-In VIP Year', places:4500, spends:5400, months:12, gift:150, needs:3, birthday:750, birthdayWhat:'Birthday treat',    refer:200}
+    D:{name:'Dip Your Toes',   places:1000, spends:1150, months:6,  gift:50,  needs:3, birthday:150, birthdayWhat:'Birthday blow-dry', refer:50},
+    S:{name:'Season of You',   places:2500, spends:3000, months:9,  gift:100, needs:3, birthday:350, birthdayWhat:'Birthday facial',   refer:50},
+    V:{name:'All-In VIP Year', places:4500, spends:5400, months:12, gift:150, needs:3, birthday:750, birthdayWhat:'Birthday treat',    refer:50}
   };
 
   // The back of the card names the salons rather than the emirate, because "Abu Dhabi salons"
