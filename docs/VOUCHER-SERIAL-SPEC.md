@@ -1,6 +1,6 @@
 # Wellness Voucher · Serial Naming System
 
-**Status:** proposed, 20 Aug 2026 · Kate · **`K` added 24 Aug 2026, removed 16 Sep 2026** · **type letter dropped 16 Sep 2026** · **checkout restructured to 4 vouchers + later referral, 16 Sep 2026**
+**Status:** proposed, 20 Aug 2026 · Kate · **`K` added 24 Aug 2026, removed 16 Sep 2026** · **type letter dropped 16 Sep 2026** · **checkout restructured to 4 vouchers + later referral, 16 Sep 2026** · **R flattened to AED 50 on every tier, 18 Sep 2026**
 **Supersedes:** the `AEWVDYT-AUH-2026-0001` scheme recorded under "Card numbering, already built" in `index.html`. That scheme was a draft written by Kate, not a convention set by Belle, and it covered the tier card only. The attribution in `index.html` was corrected on 20 Aug.
 **Reads from:** the nine Phorest gift card products (Decision 13) and the three validity clocks (19 Aug).
 
@@ -18,7 +18,7 @@ Three tiers times four checkout card types, plus one later:
 | **C** · Bonus credit (added on top) | AED 150 | AED 500 | AED 900 |
 | **G** · Gift a friend (one card, was 1/3/5 stacked before 16 Sep) | AED 50 | AED 100 | AED 150 |
 | **B** · Birthday card | Blow-dry, AED 150 | AED 350 | AED 750 |
-| **R** · Refer a friend, later, not at checkout | + AED 100 | + AED 150 | + AED 200 |
+| **R** · Refer a friend, later, not at checkout (flat since 18 Sep) | + AED 50 | + AED 50 | + AED 50 |
 
 **M + C together are her old Main card's AED 1,150 / 3,000 / 5,400 total**, just split into two printed pieces so the desk (and she) can see the placed amount and the bonus separately, matching how reception already explains it: *"She places the first number. She spends the second. The difference is ours, added on top."*
 
@@ -60,7 +60,7 @@ WV-SM-KCA-0042      Wellness voucher, AED 2,500 placed
 WV-SM-KCA-0042-1    Bonus credit, AED 500 added on top
 WV-SM-KCA-0042-2    Gift a friend, AED 100
 WV-SM-KCA-0042-3    her birthday card, AED 350
-WV-SM-KCA-0042-4    her refer-a-friend credit, AED 150 — later, once earned
+WV-SM-KCA-0042-4    her refer-a-friend credit, AED 50 — later, once earned
 ```
 
 Five cards, one number to remember and a count to four, the same for every tier now that the gift card is one card rather than 1/3/5 stacked. This is the same reasoning behind Kate's 19 Aug call to make both short clocks two months: reception holds one number, not several. The card's own label (printed on its face) says which one it is; the serial only has to say it is hers and which of her cards this one is.
@@ -144,7 +144,11 @@ This is what the print interface fills, and it is what makes Belle's 19 Aug requ
 
 5. **The type letter is gone, replaced by one running `-n`.** A same-day correction of an earlier attempt at this that kept the letter and gave every card its own `-1` — Kate: no letters, just one number, counting straight through the whole set (gifts, then birthday, then refer). The main card is the bare base serial; nothing else printed for a buyer is. Landed in `T.serialOf` / `T.faceGroups` / `T.buildSet` in `shared/voucher-card.js`. The log table's `main_serial` and the SQL views (`voucher_mapping.sql`, `voucher_referrals.sql`, `voucher_payment_method.sql`, `voucher_redemptions.sql`) still compute the shorter `WV-<tier>M-<branch>-<seq>` — that string is a per-buyer lookup key across those views, not a printed card serial, and was left alone.
 6. **The Home Ritual Kit card (`K`) is removed from the printed set.** Same message from Kate. The allowance itself, its terms, its emails and its automations are untouched — only the card artwork/tab in `T.buildSet` is gone, along with the now-dead kit-only branches in `renderCover`, `renderBack` and `cardTheme`.
-7. **Checkout restructured to 4 vouchers, off Belle's message to Kate in Salon Coords PH PEEPS** (screenshot, 16 Sep, Kate replied "korek"): Wellness voucher (`M`, the placed amount) and Bonus credit (`C`, new card type, the difference between placed and spent) split what used to be one Main card; Gift a friend (`G`) becomes one card scaled by tier (AED 50/100/150) instead of a stack of AED 100s (1/3/5). Refer a friend (`R`) is unchanged and still not part of the checkout four, since it can't print until earned. Landed in `T.TIERS` (new `gift` field, `friends`/`kit`/`kitItems` dropped) and `T.buildSet` in `shared/voucher-card.js`. **Not updated: the cheat sheets (`reception.html`, `core-team.html`, `lid.html`, the floor memo), the emails and the terms** — those still describe the old Main-card-plus-stacked-gift structure and now disagree with the live tool. Flag to Kate before relying on them.
+7. **Checkout restructured to 4 vouchers, off Belle's message to Kate in Salon Coords PH PEEPS** (screenshot, 16 Sep, Kate replied "korek"): Wellness voucher (`M`, the placed amount) and Bonus credit (`C`, new card type, the difference between placed and spent) split what used to be one Main card; Gift a friend (`G`) becomes one card scaled by tier (AED 50/100/150) instead of a stack of AED 100s (1/3/5). Refer a friend (`R`) kept its tiered value (+100/150/200) at this point and still was not part of the checkout four, since it can't print until earned. Landed in `T.TIERS` (new `gift` field, `friends`/`kit`/`kitItems` dropped) and `T.buildSet` in `shared/voucher-card.js`. **Not updated: the cheat sheets (`reception.html`, `core-team.html`, `lid.html`, the floor memo), the emails and the terms** — those still describe the old Main-card-plus-stacked-gift structure and now disagree with the live tool. Flag to Kate before relying on them.
+
+**Settled 18 September:**
+
+8. **Refer a friend (`R`) flattened to AED 50 on every tier.** Christine flagged a client's card showing the old tiered +150 for Season of You; the live `wellness-voucher` page pays a flat +AED 50 "when she visits with it, your credit grows" line across all three tiers, so the tiered +100/150/200 in this file was stale, not a live decision. Kate confirmed against the live page. Landed in `T.TIERS.refer` in `shared/voucher-card.js`, both here and in the private `trk-trs-claude-cowork` copy. **`cheat-sheets/reception.html`'s "Refer-a-friend credit (100 / 150 / 200)" row is corrected to match; the rest of that sheet's pre-16-Sep staleness (the stacked 1/3/5 gift cards, the Home Ritual Kit as a card) is untouched.**
 
 **Still open:**
 
