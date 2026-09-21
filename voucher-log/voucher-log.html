@@ -441,7 +441,7 @@ function summaryHtml(live){
     '<tbody>' + rows + '<tr class="total"><td>Total</td><td class="num">' + live.length + '</td></tr></tbody></table>';
 }
 
-/* ---------- campaign target: collected so far vs the 75k goal ---------- */
+/* ---------- campaign target: collected so far vs the 150k goal ---------- */
 function daysLeftToTarget(){
   var ms = new Date(CAMPAIGN_TARGET_DATE + 'T23:59:59') - new Date();
   return Math.max(0, Math.ceil(ms / 86400000));
