@@ -93,12 +93,21 @@ select
               when 'V' then 'All-In VIP Year' end as tier_name,
   case i.tier when 'D' then 1000 when 'S' then 2500 when 'V' then 4500 end as paid_aed,
   i.payment_method,
-  case i.tier when 'D' then 1150 when 'S' then 3000 when 'V' then 5400 end as credit_aed,
+  -- credit_aed and remaining_aed used to be the tier base only, never bumped once a referral
+  -- was earned. referral_aed was also still the pre-18-Sep tiered 100/150/200: the live
+  -- wellness-voucher page (tararose83.github.io/tara-rose-pages/wellness-voucher) has paid a
+  -- flat +AED 50 on every tier since 18 Sep (T.TIERS.refer, docs/VOUCHER-SERIAL-SPEC.md,
+  -- index.html, reception.html), and this view was the one place that fix never reached.
+  -- Fixed 21 Sep 2026: referral_aed is a flat 50, and credit_aed/remaining_aed add it once
+  -- c.nth_visit is not null (the same referral_earned condition below).
+  case i.tier when 'D' then 1150 when 'S' then 3000 when 'V' then 5400 end
+    + (case when c.nth_visit is not null then 50 else 0 end) as credit_aed,
   coalesce(red.redeemed_aed, 0) as redeemed_aed,
   (case i.tier when 'D' then 1150 when 'S' then 3000 when 'V' then 5400 end
+     + (case when c.nth_visit is not null then 50 else 0 end)
      - coalesce(red.redeemed_aed, 0)) as remaining_aed,
   case i.tier when 'D' then 1    when 'S' then 3    when 'V' then 5    end as friend_cards,
-  case i.tier when 'D' then 100  when 'S' then 150  when 'V' then 200  end as referral_aed,
+  50 as referral_aed,
   i.client_name,
   i.client_contact,
   i.purchase_date,

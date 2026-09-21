@@ -109,7 +109,9 @@ select
               when 'V' then 'All-In VIP Year' end as tier_name,
   case i.tier when 'D' then 1150 when 'S' then 3000 when 'V' then 5400 end as credit_aed,
   case i.tier when 'D' then 1    when 'S' then 3    when 'V' then 5    end as friend_cards,
-  case i.tier when 'D' then 100  when 'S' then 150  when 'V' then 200  end as referral_aed,
+  -- Superseded by sql/voucher_redemptions.sql, which is what's actually live. Kept in step
+  -- with it anyway: flat 50 since 18 Sep, see the note there.
+  50 as referral_aed,
   i.client_name,
   i.client_contact,
   i.purchase_date,
