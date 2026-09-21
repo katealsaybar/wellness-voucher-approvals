@@ -50,6 +50,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
 .owns{font-size:16px;color:var(--muted);max-width:66ch;}
 .stamp{margin-top:12px;font-size:13px;color:var(--muted);}
 .stamp b{color:var(--ink);font-weight:600;}
+.who{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:10px;}
+.who b{color:var(--ink);}
+.pill{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 9px;border-radius:999px;background:var(--sand);color:var(--ink);}
+.pill.admin{background:var(--ink);color:#fff;}
+.btn.sm{font-size:12px;padding:6px 10px;}
 
 .mock{background:var(--amber-bg);border:1px solid #EBD9B4;border-left:3px solid var(--amber);
   border-radius:10px;padding:14px 16px;font-size:14px;margin-bottom:24px;}
@@ -134,16 +140,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1
       <div class="team">Issue a Wellness Card</div>
       <p class="owns">Pick the branch, the tier and her name. The serial, the value and every expiry date are worked out for you. Then print the card she needs as a PDF.</p>
       <div class="stamp">Wellness Voucher &middot; purchases close <b>31 October 2026</b></div>
+      <div class="who" id="who"></div>
     </div>
 
     <div class="pdfrow">
-      <a class="doclink" href="wellness-voucher-pricing-abu-dhabi.pdf" target="_blank" rel="noopener">
+      <a class="doclink" href="wellness-voucher-pricing.pdf" target="_blank" rel="noopener">
         <span class="dl-ico" aria-hidden="true">PDF</span>
-        Abu Dhabi pricing
-      </a>
-      <a class="doclink" href="wellness-voucher-pricing-dubai.pdf" target="_blank" rel="noopener">
-        <span class="dl-ico" aria-hidden="true">PDF</span>
-        Dubai pricing
+        Pricing
       </a>
     </div>
   </div>
@@ -416,6 +419,27 @@ function remotePeek(branch){
 /* ---------- wiring ---------- */
 function el(id){ return document.getElementById(id); }
 var state = {set:null, active:0, pageview:false};
+
+// Same "Signed in as … · Sign out" widget as voucher-log.html, so a receptionist who wanders
+// between the two gated pages sees one consistent way to tell who is at the till and to
+// switch accounts, rather than having to reload or hunt for a sign-out control.
+function drawWho(){
+  var email = window.TRS && window.TRS.email ? window.TRS.email() : null;
+  var isAdm = !!(window.TRS && window.TRS.isAdmin && window.TRS.isAdmin());
+
+  el('who').innerHTML = email
+    ? 'Signed in as <b>' + esc(email) + '</b> <span class="pill' + (isAdm ? ' admin' : '') + '">' +
+      (isAdm ? 'can edit' : 'view only') + '</span> <button class="btn ghost sm" id="signout">Sign out</button>'
+    : 'Not signed in <span class="pill">view only</span> ' +
+      '<a class="btn ghost sm" href="' + (window.TRS ? window.TRS.loginUrl() : '#') +
+      '" style="text-decoration:none">Sign in</a>';
+
+  if (el('signout')){
+    el('signout').addEventListener('click', function(){
+      window.TRS.signOut().then(drawWho);
+    });
+  }
+}
 
 function refreshCounter(){
   var b = el('branch').value;
@@ -766,9 +790,10 @@ if (iso(today()) > C.CAMPAIGN.closes){
 // silently correcting itself a moment later.
 if (window.TRSGate) {
   window.TRSGate.require('This page hands out real card numbers, and a number cannot be ' +
-    'taken back once it is issued').then(refreshCounter);
+    'taken back once it is issued').then(function (){ drawWho(); refreshCounter(); });
+  window.TRS.onAuthChange(drawWho);
 }
-else { refreshCounter(); }
+else { drawWho(); refreshCounter(); }
 </script>
 </body>
 </html>
