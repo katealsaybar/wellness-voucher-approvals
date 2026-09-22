@@ -76,17 +76,37 @@
       : 'Full facial of your choice';
   };
 
-  // The birthday facial in Dubai is at AL QUOZ ONLY: Motor City does not do beauty. Everywhere
-  // else on a card "redeemable at" means both salons in the emirate, so this is the one card
-  // that cannot use salonsIn().
-  T.birthdaySalons = function (emirate) {
-    return emirate === 'Dubai' ? ['Al Quoz'] : T.salonsIn(emirate);
+  // The birthday card excludes Motor City: it does not do beauty at all. That was true before
+  // the 22 Sep UAE-wide redemption change and stays true after it, so this card keeps its own
+  // salon list (beautySalons) instead of the all-branches list every other card now uses.
+  T.birthdaySalons = function () {
+    return T.beautySalons();
   };
 
   T.salonsIn = function (emirate) {
     var out = [], k;
     for (k in T.BRANCHES) if (T.BRANCHES[k].emirate === emirate) out.push(T.BRANCHES[k].name);
     return out;
+  };
+
+  // UAE-wide redemption, Kate's call 22 Sep 2026, replacing the emirate lock Term 3 held since
+  // 20 Aug. allSalons is every branch, for the M/C/G/R cards. beautySalons excludes Motor City:
+  // that exclusion was never about the emirate lock, it is Motor City not doing beauty at all,
+  // so it survives the policy change untouched.
+  T.allSalons = function () {
+    var out = [], k;
+    for (k in T.BRANCHES) out.push(T.BRANCHES[k].name);
+    return out;
+  };
+
+  T.beautySalons = function () {
+    var out = [], k;
+    for (k in T.BRANCHES) if (k !== 'MC') out.push(T.BRANCHES[k].name);
+    return out;
+  };
+
+  T.joinList = function (arr) {
+    return arr.length <= 1 ? arr.join('') : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
   };
 
   // Term 3: the credit stays in the emirate it was bought in, so there are exactly two terms
@@ -311,10 +331,10 @@
         '<div class="dates">' +
           '<div>Purchased <b>' + T.fmt(set.purchase) + '</b></div>' +
           '<div>Valid until <b>' + expiry + '</b></div>' +
-          // The cardholder needs to know where the credit is good, and Term 3 holds it to
-          // the emirate it was bought in. The issuing branch is already inside the serial,
-          // so printing it twice would cost the one line that answers her actual question.
-          '<div>' + T.esc(b.emirate) + ' salons</div>' +
+          // The cardholder needs to know where the credit is good. UAE-wide since 22 Sep 2026
+          // (Kate), replacing the emirate lock Term 3 held. The issuing branch is already
+          // inside the serial, so this line answers where she can spend it, not where she bought.
+          '<div>' + (card.type === 'B' ? 'Selected UAE salons' : 'All UAE salons') + '</div>' +
         '</div>' +
       '</div>' +
       // Dawn's wording, term 12. The front stays a pointer rather than an address: the back
@@ -374,7 +394,7 @@
       '<div class="wv-rule"></div>' +
       '<div class="wv-amt"><small>AED</small>' + T.money(main.value) + '</div>' +
       '<div class="wv-sub">Yours until ' + T.fmt(main.expiry) + ', at ' +
-        T.esc(T.salonsIn(b.emirate).join(' and ')) + '.</div>' +
+        T.esc(T.joinList(T.allSalons())) + ', any Tara Rose salon in the UAE.</div>' +
       '<h2>In this file</h2>' +
       '<ul>' + list + '</ul>' +
       friends +
@@ -425,8 +445,7 @@
       '<div class="wv-qrbox"><img src="../assets/' + qrFile + '" alt="' + qrAlt + '"></div>' +
       '<div class="wv-qrcap">' + T.esc(qrCap) + '</div>' +
       '<div class="wv-bk">' +
-        row('Redeemable at', T.esc((card.type === 'B' ? T.birthdaySalons(b.emirate)
-                                                     : T.salonsIn(b.emirate)).join(' and ')) + ' only') +
+        row('Redeemable at', T.esc(T.joinList(card.type === 'B' ? T.birthdaySalons() : T.allSalons())) + ' only') +
         row('Full serial', T.esc(card.serial)) +
         row('Valid until', expiry) +
       '</div>' +
