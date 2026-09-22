@@ -612,7 +612,7 @@ el('issue').addEventListener('click', function(){
     state.set = buildSet(branch, tier, name, purchase, {
       seq: 0, id: null, live: false, practice: true,
       mainExpiry: addMonths(purchase, TIERS[tier].months),
-      friendExpiry: addMonths(purchase, 2)
+      friendExpiry: addMonths(purchase, TIERS[tier].months)
     });
     state.active = 0;
     setDbState('practice');
@@ -664,7 +664,7 @@ el('issue').addEventListener('click', function(){
       alloc = {
         seq: localSeq(branch), id: null, live: false,
         mainExpiry: addMonths(purchase, TIERS[tier].months),
-        friendExpiry: addMonths(purchase, 2)
+        friendExpiry: addMonths(purchase, TIERS[tier].months)
       };
     }
     state.set = buildSet(branch, tier, name, purchase, alloc);

@@ -240,7 +240,7 @@
       face:T.faceGroups(tier,branch,seq,n),
       gift:true, value:t.gift, valueLabel:'Gift credit',
       expiry:friendExpiry, printable:true,
-      note:'Two months from <b>her</b> purchase date, not from the day she hands it over.'
+      note:'Same clock as the Wellness voucher, from <b>her</b> purchase date, not the day she hands it over.'
     });
 
     n++;
@@ -377,8 +377,8 @@
         '<p>' + (gifts === 1 ? 'One card, in its own file' : gifts + ' cards, one file each') +
         ', so you can pass one to a friend without sending her the rest.</p>' +
         '<h2>One thing to do now</h2>' +
-        '<p>Hand those out early. They run for two months from the day <b>you</b> bought, ' +
-        'not from the day you give one away.</p>'
+        '<p>Hand those out early. They run on the same clock as your Wellness voucher, ' +
+        'from the day <b>you</b> bought, not the day you give one away.</p>'
       : '';
 
     // Named but not promised as an attachment, because on the day she pays it does not exist

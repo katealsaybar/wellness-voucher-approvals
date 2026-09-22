@@ -126,7 +126,7 @@ This is what the print interface fills, and it is what makes Belle's 19 Aug requ
 |---|---|
 | `M` | purchase + 6 months (D) / 9 (S) / 12 (V) |
 | `C` | same as `M`. It is the other half of the same credit, not a separate offer. |
-| `G` | purchase + 2 months, from **her** purchase date, not the day she hands it over |
+| `G` | same as `M`, from **her** purchase date, not the day she hands it over. Used to be a flat purchase + 2 months; Kate changed it 22 Sep 2026, see Settled below. |
 | `B` | same as `M`. Usable any time inside the main voucher's validity, not gated to her birthday month. Confirmed 20 Aug. |
 | `R` | referral completion + 2 months |
 
@@ -149,6 +149,11 @@ This is what the print interface fills, and it is what makes Belle's 19 Aug requ
 **Settled 18 September:**
 
 8. **Refer a friend (`R`) flattened to AED 50 on every tier.** Christine flagged a client's card showing the old tiered +150 for Season of You; the live `wellness-voucher` page pays a flat +AED 50 "when she visits with it, your credit grows" line across all three tiers, so the tiered +100/150/200 in this file was stale, not a live decision. Kate confirmed against the live page. Landed in `T.TIERS.refer` in `shared/voucher-card.js`, both here and in the private `trk-trs-claude-cowork` copy. **`cheat-sheets/reception.html`'s "Refer-a-friend credit (100 / 150 / 200)" row is corrected to match; the rest of that sheet's pre-16-Sep staleness (the stacked 1/3/5 gift cards, the Home Ritual Kit as a card) is untouched.**
+
+**Settled 22 September:**
+
+9. **Redemption goes UAE-wide, replacing Term 3's emirate lock.** Kate: "marami nang nagbago since aug 20." All four salons now print on every card instead of the emirate she bought in; birthday cards still exclude Motor City, since that was always a beauty-capability gap, not the emirate rule. Landed in `T.allSalons`/`T.beautySalons`/`T.joinList` in `shared/voucher-card.js`, both here and in the private `trk-trs-claude-cowork` copy. **Not yet updated: the published `website-mockups/terms/terms.html`, the `automations.js` GHL blueprint (its emirate-mismatch task and two-branch confirmation email), and the reception/staffroom/spot-check/runbook cheat sheets** — all still state the emirate lock.
+10. **Gift card (`G`) drops its own flat 2-month clock, runs the same tier clock as `M`.** Kate's call, same session as the emirate change above. Landed in `issue_voucher()` in `sql/voucher_issues_setup.sql` (both repos' copies) and in `shared/voucher-card.js`'s card note and cover-page text. Existing rows backfilled: `update public.voucher_issues set friend_expires_on = main_expires_on;`, run by Kate in Supabase's SQL Editor (not reachable from the MCP tool here).
 
 **Still open:**
 

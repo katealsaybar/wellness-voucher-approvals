@@ -260,7 +260,11 @@ begin
     p_branch, v_seq, p_tier, btrim(p_client_name), nullif(btrim(coalesce(p_client_contact,'')), ''),
     p_purchase_date,
     (p_purchase_date + make_interval(months => v_months))::date,
-    (p_purchase_date + make_interval(months => 2))::date,
+    -- Kate's call, 22 Sep 2026: the Gift card no longer runs its own flat 2-month clock, it
+    -- shares the Wellness voucher's tier clock. friend_expires_on is kept as its own column
+    -- rather than dropped, for the same denormalisation reason main_expires_on is: a card
+    -- already in a client's hand keeps the expiry it was printed with.
+    (p_purchase_date + make_interval(months => v_months))::date,
     nullif(btrim(coalesce(p_issued_by,'')), '')
   )
   returning * into v_row;
