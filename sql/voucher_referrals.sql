@@ -75,7 +75,12 @@ create table if not exists public.voucher_referrals (
   -- Set when she arrived holding one of the buyer's AED 100 cards. That card already carries
   -- the buyer's sequence, so it identifies the referrer with nothing asked of anybody. This
   -- is the whole reason the gift card and the referral are the same trail.
-  gift_serial   text check (gift_serial is null or gift_serial ~ '^WV-[DSV]G-(SAA|KCA|AQ|MC)-[0-9]{4}-[1-5]$'),
+  -- Stale until 22 Sep 2026: this used to check the pre-16-Sep scheme (a type letter G,
+  -- suffix 1-5 for a stacked gift card). The 16 Sep restructure moved to a fixed M and one
+  -- running -n (Bonus 1, Gift 2, Birthday 3, Refer 4, see T.serialOf in shared/voucher-card.js
+  -- and docs/VOUCHER-SERIAL-SPEC.md section 2), so every real gift card serial since then has
+  -- been rejected by this check. Kate hit it live on 22 Sep trying to log a friend's card.
+  gift_serial   text check (gift_serial is null or gift_serial ~ '^WV-[DSV]M-(SAA|KCA|AQ|MC)-[0-9]{4}-2$'),
 
   -- The day she VISITED AND PAID. Not the day she booked, and not the day she was added
   -- here. The clock in the pack starts from this date, so it is entered, never defaulted.
@@ -85,6 +90,16 @@ create table if not exists public.voucher_referrals (
   note          text check (note is null or length(btrim(note)) <= 300),
   created_at    timestamptz not null default now()
 );
+
+-- CREATE TABLE IF NOT EXISTS is a no-op on a table that already exists, so re-running this
+-- file alone would never have fixed the stale gift_serial pattern above on a live database.
+-- This makes that part of the file actually idempotent: drop the old constraint by its
+-- auto-generated name (visible in the "violates check constraint" error) and let the column
+-- definition's own check clause above apply to new rows going forward, on a fresh install AND
+-- on a database that already had the table.
+alter table public.voucher_referrals drop constraint if exists voucher_referrals_gift_serial_check;
+alter table public.voucher_referrals add constraint voucher_referrals_gift_serial_check
+  check (gift_serial is null or gift_serial ~ '^WV-[DSV]M-(SAA|KCA|AQ|MC)-[0-9]{4}-2$');
 
 -- The same friend cannot be counted twice against one buyer. Names are a weak key, but
 -- double-counting one friend to reach three is the likely error and this catches it. A real

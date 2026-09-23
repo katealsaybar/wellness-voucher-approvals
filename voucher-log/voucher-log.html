@@ -594,8 +594,8 @@ function detailHtml(r){
         '<div class="fld"><label>Day she visited and paid</label>' +
           '<input type="date" data-fd="' + r.id + '" value="' + C.iso(C.today()) + '"></div>' +
         '<div class="fld"><label>Gift card serial, if she had one</label>' +
-          '<input type="text" data-fg="' + r.id + '" placeholder="WV-' + r.tier + 'G-' + r.branch + '-' +
-            C.pad4(r.seq) + '-1"></div>' +
+          '<input type="text" data-fg="' + r.id + '" placeholder="WV-' + r.tier + 'M-' + r.branch + '-' +
+            C.pad4(r.seq) + '-2"></div>' +
         '<button class="btn sm" data-addf="' + r.id + '">Add this friend</button>' +
       '</div>';
     }
@@ -649,7 +649,11 @@ function detailHtml(r){
   '</div>';
 
   var right =
-    '<div><div class="lbl">Friend cards</div>' + r.friend_cards + ' &times; AED 100, expire ' +
+    // r.friend_cards (1/3/5 by tier) and a hardcoded "AED 100" are both pre-16-Sep: every tier
+    // ships exactly one Gift card now, scaled by tier (T.TIERS[tier].gift), not a stack of
+    // AED 100s. Reads the value straight from shared/voucher-card.js so it can't drift from
+    // what the card itself says, rather than a second number typed here.
+    '<div><div class="lbl">Gift card</div>AED ' + C.money(C.TIERS[r.tier].gift) + ', expires ' +
       C.fmt(r.friend_expires_on) + '</div>' +
     '<div style="margin-top:10px"><div class="lbl">Referral credit</div>' +
       (hasReferrals && r.referral_earned
