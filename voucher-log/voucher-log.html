@@ -593,9 +593,12 @@ function detailHtml(r){
           '<input type="text" data-fn="' + r.id + '" placeholder="Full name"></div>' +
         '<div class="fld"><label>Day she visited and paid</label>' +
           '<input type="date" data-fd="' + r.id + '" value="' + C.iso(C.today()) + '"></div>' +
-        '<div class="fld"><label>Gift card serial, if she had one</label>' +
-          '<input type="text" data-fg="' + r.id + '" placeholder="WV-' + r.tier + 'M-' + r.branch + '-' +
-            C.pad4(r.seq) + '-2"></div>' +
+        '<div class="fld"><label><input type="checkbox" data-fg="' + r.id + '"> ' +
+          'She was holding the Gift card (' + C.esc(C.serialOf(r.tier, r.branch, r.seq, 2)) +
+          ')</label>' +
+          '<div class="muted" style="font-size:12px;margin-top:4px">Only ONE of her three ' +
+          'friends ever has this: there is one Gift card, not three. Leave unticked ' +
+          'for the other two.</div></div>' +
         '<button class="btn sm" data-addf="' + r.id + '">Add this friend</button>' +
       '</div>';
     }
@@ -779,11 +782,16 @@ var NL = String.fromCharCode(10);
 function addFriend(id){
   var name = document.querySelector('[data-fn="' + id + '"]').value.trim();
   var when = document.querySelector('[data-fd="' + id + '"]').value;
-  var gift = document.querySelector('[data-fg="' + id + '"]').value.trim().toUpperCase();
+  var hadGift = document.querySelector('[data-fg="' + id + '"]').checked;
+  var row = byId(id);
+  // The serial is computed, never typed: it is always this buyer's one Gift card
+  // (position 2 in the fixed order, see shared/voucher-card.js), so there is nothing left
+  // for a human to mistype, mismatch to the wrong card, or reuse for a second friend.
+  var gift = hadGift ? C.serialOf(row.tier, row.branch, row.seq, 2) : null;
   if (!name || !when) return;
   db().from('voucher_referrals').insert({
     issue_id:id, friend_name:name, visited_on:when,
-    gift_serial:gift || null, recorded_by:window.TRS.email()
+    gift_serial:gift, recorded_by:window.TRS.email()
   }).then(function (res){
     if (res.error){ alert('Not saved: ' + res.error.message); return; }
     load();
