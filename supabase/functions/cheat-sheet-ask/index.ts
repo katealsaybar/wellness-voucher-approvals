@@ -122,6 +122,17 @@ function cors(origin: string | null): Record<string, string> {
   };
 }
 
+// Error status, read off the error itself. Not instanceof: this SDK build does
+// not hang its error classes off the default export, so `instanceof
+// Anthropic.RateLimitError` threw a TypeError inside the catch, and every API
+// error (rate limit, out of credit, overloaded) reached the browser as a bare
+// 500 with no CORS header, which the widget reports as "could not reach".
+// Found on dashboard-ask, its sibling, 24 Sep 2026.
+const statusOf = (e: unknown): number | undefined => {
+  const n = (e as { status?: unknown })?.status;
+  return typeof n === "number" ? n : undefined;
+};
+
 const json = (body: unknown, headers: Record<string, string>, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -207,7 +218,7 @@ Deno.serve(async (req: Request) => {
         return await ask();
       } catch (e) {
         last = e;
-        const overloaded = e instanceof Anthropic.APIStatusError && e.status === 529;
+        const overloaded = statusOf(e) === 529;
         if (!overloaded || attempt === 2) throw e;
         console.warn(`[ask] ${spec.id} overloaded, retry ${attempt + 1}`);
         await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
@@ -240,16 +251,22 @@ Deno.serve(async (req: Request) => {
     out.model = picked;
     return json(out, CORS);
   } catch (error) {
-    if (error instanceof Anthropic.RateLimitError) {
+    const status = statusOf(error);
+    const msg = String((error as { message?: string })?.message ?? "");
+    if (/credit balance/i.test(msg)) {
+      return json({ error: "The answer service has run out of Anthropic credit. Tell Kate to top up the API account. The sheets are still correct." }, CORS, 503);
+    }
+    if (status === 429) {
       return json({ error: "Too many questions at once. Wait a moment and ask again." }, CORS, 429);
     }
-    if (error instanceof Anthropic.AuthenticationError) {
+    if (status === 401 || status === 403) {
       return json({ error: "The answer service cannot sign in. Tell Kate the API key needs checking." }, CORS, 500);
     }
-    if (error instanceof Anthropic.APIStatusError && error.status === 529) {
+    if (status === 529) {
       return json({ error: "The answer service is busy right now. Ask again in a few seconds; it usually clears straight away." }, CORS, 503);
     }
-    if (error instanceof Anthropic.APIConnectionError) {
+    if (status === undefined) {
+      console.error("[ask] no response from", spec.id, error);
       return json({ error: "Could not reach the answer service. Try again in a moment." }, CORS, 503);
     }
     console.error("[ask] failed on", spec.id, error);
