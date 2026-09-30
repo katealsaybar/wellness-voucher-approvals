@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>The Wellness Voucher</title>
+<!-- Source for ../wellness-voucher-pricing.pdf (the till's pricing sheet).
+     Print: chrome --headless --no-pdf-header-footer --print-to-pdf=../wellness-voucher-pricing.pdf wellness-voucher-pricing.html
+     Rebuilt 30 Sep 2026: the original PDF was a one-off print of Tara's page with no source kept. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&display=block" rel="stylesheet">
+<style>
+@page{ size:A4 landscape; margin:0 }
+*{ box-sizing:border-box; margin:0; padding:0 }
+html,body{ width:297mm; height:210mm }
+body{ background:#EFEBE4; font-family:Inter,sans-serif; color:#2A2A2A; padding:10.5mm 13mm 0; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.head{ text-align:center }
+.head img{ width:44mm; display:block; margin:0 auto }
+.head .uae{ font-size:8pt; letter-spacing:.6em; color:#6b6b6b; margin:1.2mm 0 0 .6em }
+.head h1{ font-family:'Playfair Display',serif; font-style:italic; font-weight:400; font-size:13pt; color:#3a3a3a; margin-top:2.6mm }
+.cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:6mm; margin-top:6.5mm }
+.card{ background:#fff; border:1px solid #e3ddd2; border-radius:2mm; padding:5mm 5.2mm 4.6mm }
+.pill{ display:inline-block; font-size:6.2pt; font-weight:700; letter-spacing:.14em; text-transform:uppercase; padding:1.3mm 3.2mm; border-radius:99px; background:#E7E2DA; color:#555 }
+.pill.teal{ background:#7DE3CF; color:#1f3d38 }
+h2{ font-family:'Playfair Display',serif; font-weight:600; font-size:16pt; margin:3.4mm 0 2.4mm; color:#222 }
+ul{ list-style:none }
+li{ display:flex; justify-content:space-between; gap:4mm; font-size:7.9pt; line-height:1.4; padding:1.5mm 0; border-bottom:1px solid #ece8e1 }
+li span{ flex:1 } li b{ font-weight:600; white-space:nowrap }
+li.total{ font-weight:600; border-bottom:1.3px solid #2A2A2A }
+li.worth{ border-bottom:0; color:#1f7a5c; font-weight:700; font-size:9.2pt; padding-top:2.6mm }
+li.worth b{ font-weight:700 }
+.pay{ font-size:7.3pt; font-style:italic; color:#777; margin-top:2.4mm }
+.notes{ border-top:1px solid #d9d3c8; margin-top:5.5mm; padding-top:3.4mm; font-size:6.9pt; line-height:1.6; color:#444 }
+.notes b{ color:#222 }
+.src{ font-size:6.4pt; color:#9a948a; margin-top:1mm }
+</style>
+</head>
+<body>
+<div class="head">
+  <img src="tara-rose-dark-logo.png" alt="Tara Rose Salon">
+  <div class="uae">UAE</div>
+  <h1>The Wellness Voucher</h1>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <span class="pill">A light way back in</span>
+    <h2>Dip Your Toes</h2>
+    <ul>
+      <li><span>Credit for any service, retail and home care</span><b>AED 1,000</b></li>
+      <li><span>Self-Care Bonus, added on top</span><b>+ AED 150</b></li>
+      <li class="total"><span>Yours to spend, from day one</span><b>AED 1,150</b></li>
+      <li><span>Gift voucher for a friend, sent in your name</span><b>AED 50</b></li>
+      <li><span>Your credit grows when she visits</span><b>+ AED 50</b></li>
+      <li><span>3 friends in, a facial or treatment on us · 5, first choice of the next window</span></li>
+      <li><span>A blow-dry on your birthday, or any day you choose</span><b>AED 150</b></li>
+      <li><span>The Reset Kit, the self-care at home that holds your rhythm</span><b>Included</b></li>
+      <li><span>Priority last-minute slots, any service</span><b>6 months</b></li>
+      <li><span>Yours to use for</span><b>6 months</b></li>
+      <li class="worth"><span>What it is worth</span><b>AED 1,350</b></li>
+    </ul>
+    <p class="pay">Paid in full, card or cash</p>
+  </div>
+
+  <div class="card">
+    <span class="pill teal">Our recommendation</span>
+    <h2>Season of You</h2>
+    <ul>
+      <li><span>Credit for any service, retail and home care</span><b>AED 2,500</b></li>
+      <li><span>Your Self-Care Bonus, added on top</span><b>+ AED 500</b></li>
+      <li class="total"><span>Yours to spend, from day one</span><b>AED 3,000</b></li>
+      <li><span>Gift voucher for a friend, sent in your name</span><b>AED 100</b></li>
+      <li><span>Your credit grows when she visits</span><b>+ AED 50</b></li>
+      <li><span>3 friends in, a facial or treatment on us · 5, first choice of the next window</span></li>
+      <li><span>A facial, or a scalp and hair treatment with a blow-dry, on your birthday or any day</span><b>AED 350</b></li>
+      <li><span>The Season Kit, the self-care at home that holds your rhythm</span><b>Included</b></li>
+      <li><span>Priority last-minute slots, any service</span><b>9 months</b></li>
+      <li><span>Yours to use for</span><b>9 months</b></li>
+      <li class="worth"><span>What it is worth</span><b>AED 3,450</b></li>
+    </ul>
+    <p class="pay">Or 4 interest-free payments of AED 625 with Tabby</p>
+  </div>
+
+  <div class="card">
+    <span class="pill teal">The whole year, held</span>
+    <h2>All-In VIP Year</h2>
+    <ul>
+      <li><span>Credit for any service, retail and home care</span><b>AED 4,500</b></li>
+      <li><span>Your Self-Care Bonus, added on top</span><b>+ AED 900</b></li>
+      <li class="total"><span>Yours to spend, from day one</span><b>AED 5,400</b></li>
+      <li><span>Gift voucher for a friend, sent in your name</span><b>AED 150</b></li>
+      <li><span>Your credit grows when she visits</span><b>+ AED 50</b></li>
+      <li><span>3 friends in, a facial or treatment on us · 5, first choice of the next window</span></li>
+      <li><span>A facial and a scalp and hair treatment with a blow-dry, on your birthday or any day</span><b>AED 750</b></li>
+      <li><span>The VIP Ritual Kit, the fuller self-care at home, with both journals inside</span><b>Included</b></li>
+      <li><span>Priority last-minute slots, any service</span><b>12 months</b></li>
+      <li><span>Yours to use for</span><b>12 months</b></li>
+      <li class="worth"><span>What it is worth</span><b>AED 6,300</b></li>
+    </ul>
+    <p class="pay">Or 4 interest-free payments of AED 1,125 with Tabby</p>
+  </div>
+</div>
+
+<div class="notes">
+  <p><b>How the credit works:</b> Not money off, a plan. Your credit covers any service, retail including home care, and new hair extensions. It is a spending cap: if your bill comes to more than you have left, your stylist lets you know before the service so there are no surprises at the till.</p>
+  <p><b>Self-Care Bonus:</b> spends on beauty, treatments, keratin and blow-dries only, never hair colour, home care or new hair extensions. It is redeemed with a junior stylist, a blow-dry specialist or a beautician.</p>
+  <p><b>Confidence Promise:</b> If something does not feel right within seven days of any colour or treatment service, come back and we refine it.</p>
+  <p><b>Terms:</b> Vouchers are non-refundable and non-transferable, and stay on your account until used or the validity date passes. Gift cards are sent digitally in the recipient's name; your personal credit stays tied to your account.</p>
+  <p class="src">Source: tararose83.github.io/tara-rose-pages/wellness-voucher · printed 15 Sept 2026, covered items updated 30 Sept 2026 · window closes 30 October 2026</p>
+</div>
+</body>
+</html>
