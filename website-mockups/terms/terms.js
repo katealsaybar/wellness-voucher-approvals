@@ -13,6 +13,7 @@
     var ad = document.getElementById('btn-ad');
     var dxb = document.getElementById('btn-dxb');
     var diff = document.getElementById('btn-diff');
+    if (!ad || !dxb || !diff) return; // switch removed 1 Oct 2026: one UAE page now
 
     function show(v) {
       body.classList.toggle('v-ad', v === 'ad');
