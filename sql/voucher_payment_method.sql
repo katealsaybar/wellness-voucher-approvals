@@ -135,7 +135,9 @@ begin
     p_branch, v_seq, p_tier, btrim(p_client_name), nullif(btrim(coalesce(p_client_contact,'')), ''),
     p_purchase_date,
     (p_purchase_date + make_interval(months => v_months))::date,
-    (p_purchase_date + make_interval(months => 2))::date,
+    -- Kate, 22 Sep 2026: the Gift card runs the Wellness voucher's tier clock, not a flat 2 months.
+    -- This file redefines issue_voucher() after voucher_issues_setup.sql, so it must carry the same rule.
+    (p_purchase_date + make_interval(months => v_months))::date,
     nullif(btrim(coalesce(p_issued_by,'')), ''),
     p_payment_method
   )
